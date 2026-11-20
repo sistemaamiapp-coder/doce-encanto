@@ -52,6 +52,11 @@ const FAV_KEY = 'doceEncanto.favs.v1';
 const MY_KEY = 'doceEncanto.myorders.v1';
 const CUST_KEY = 'doceEncanto.customer.v1';
 const SESSION_KEY = 'doceEncanto.session.v1';
+const PIN_KEY = 'doceEncanto.pin.v1';
+
+/* Banco online (Supabase). A chave publicável é pública por design. */
+const CLOUD_URL = 'https://uanrqgnsrfvcxdwtenjy.supabase.co';
+const CLOUD_KEY = 'sb_publishable_fG0B8csKs73RiZwcEQoOAg_zT_Jx2jE';
 
 const APP_IMAGES = [
   'assets/img/hero-confeitaria.jpg', 'assets/img/bolo-chocolate.jpg', 'assets/img/bolo-redvelvet.jpg',
@@ -337,6 +342,11 @@ const state = {
   menuFilter: { q: '', cat: 'all' },
   chart: null,
   pendingConfirm: null,
+  cloud: false,
+  cloudCatalogEmpty: false,
+  adminPin: '',
+  cloudSyncTimer: null,
+  adminTimer: null,
   report: { from: dateInput(daysAgo(30)), to: dateInput(new Date()) }
 };
 
@@ -358,11 +368,136 @@ function loadData() {
 function saveData() {
   try {
     localStorage.setItem(DB_KEY, JSON.stringify(data));
-    return true;
   } catch (e) {
     toast('Não foi possível salvar: o armazenamento do navegador está cheio.', 'error');
     return false;
   }
+  if (state.cloud && state.adminAuthed) scheduleCatalogSync();
+  return true;
+}
+
+/* ------------------------------------------------------------
+   3.1 Banco online
+   ------------------------------------------------------------ */
+async function cloudRpc(fn, args) {
+  const res = await fetch(`${CLOUD_URL}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: {
+      apikey: CLOUD_KEY,
+      Authorization: `Bearer ${CLOUD_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(args || {})
+  });
+  if (!res.ok) {
+    let msg = `cloud-${res.status}`;
+    try { const j = await res.json(); msg = j.message || j.hint || msg; } catch (e) { /* ignore */ }
+    throw new Error(msg);
+  }
+  if (res.status === 204) return null;
+  const txt = await res.text();
+  return txt ? JSON.parse(txt) : null;
+}
+
+function adminPin() {
+  return state.adminPin || sessionStorage.getItem(PIN_KEY) || '';
+}
+
+async function cloudBootstrap() {
+  try {
+    const cat = await cloudRpc('de_public_catalog');
+    if (!cat) throw new Error('empty');
+    state.cloud = true;
+    const hasCatalog = Array.isArray(cat.products) && cat.products.length > 0;
+    state.cloudCatalogEmpty = !hasCatalog;
+    if (hasCatalog) {
+      data.settings = { ...data.settings, ...cat.settings, adminPin: data.settings.adminPin };
+      data.categories = Array.isArray(cat.categories) ? cat.categories : data.categories;
+      data.products = cat.products;
+      data.coupons = Array.isArray(cat.coupons) ? cat.coupons : data.coupons;
+      data.reviews = Array.isArray(cat.reviews) ? cat.reviews : data.reviews;
+      try { localStorage.setItem(DB_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
+    }
+    return true;
+  } catch (e) {
+    state.cloud = false;
+    return false;
+  }
+}
+
+async function cloudLoadAdmin(silent = false) {
+  const pin = adminPin();
+  if (!state.cloud || !pin) return false;
+  try {
+    const d = await cloudRpc('de_admin_data', { p_pin: pin });
+    if (!d) return false;
+    data.orders = Array.isArray(d.orders) ? d.orders : [];
+    data.reviews = Array.isArray(d.reviews) ? d.reviews : [];
+    return true;
+  } catch (e) {
+    if (!silent) toast('Não foi possível carregar os pedidos online.', 'error');
+    return false;
+  }
+}
+
+async function pushCatalog() {
+  const pin = adminPin();
+  if (!state.cloud || !pin) return false;
+  try {
+    await cloudRpc('de_admin_save_catalog', {
+      p_pin: pin,
+      p_categories: data.categories,
+      p_products: data.products,
+      p_coupons: data.coupons,
+      p_settings: data.settings
+    });
+    state.cloudCatalogEmpty = false;
+    return true;
+  } catch (e) {
+    toast('Não foi possível publicar as alterações online.', 'error');
+    return false;
+  }
+}
+
+function scheduleCatalogSync() {
+  clearTimeout(state.cloudSyncTimer);
+  state.cloudSyncTimer = setTimeout(() => { pushCatalog(); }, 700);
+}
+
+async function adminLogin(pin) {
+  let ok = false;
+  if (state.cloud) {
+    try { ok = !!(await cloudRpc('de_admin_check', { p_pin: pin })); }
+    catch (e) { ok = false; }
+  } else {
+    ok = pin === String(data.settings.adminPin);
+  }
+  if (!ok) return false;
+  state.adminAuthed = true;
+  state.adminPin = pin;
+  data.settings.adminPin = pin;
+  sessionStorage.setItem(SESSION_KEY, '1');
+  sessionStorage.setItem(PIN_KEY, pin);
+  if (state.cloud) {
+    const seeded = state.cloudCatalogEmpty;
+    state.cloudCatalogEmpty = false;
+    await cloudLoadAdmin(true);
+    if (seeded) await pushCatalog();
+  }
+  return true;
+}
+
+async function ensureMyOrders() {
+  if (!state.cloud) return;
+  const ids = myOrderIds();
+  const missing = ids.filter((id) => !data.orders.some((o) => o.id === id));
+  if (!missing.length) return;
+  const results = await Promise.all(missing.map((id) =>
+    cloudRpc('de_order_track', { p_id: id }).catch(() => null)
+  ));
+  results.filter(Boolean).forEach((o) => {
+    if (!data.orders.some((x) => x.id === o.id)) data.orders.push(o);
+  });
 }
 
 function saveCart() {
@@ -1009,7 +1144,7 @@ function openCheckout() {
     }
   });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(form);
     const type = fd.get('type');
@@ -1027,9 +1162,8 @@ function openCheckout() {
     if (type === 'delivery' && address.length < 5) { toast('Informe o endereço completo para entrega.', 'error'); return; }
 
     const summary = cartSummary(type);
-    const seq = (data.meta.seq = (data.meta.seq || 1000) + 1);
     const order = {
-      id: uid('o'), code: seq, createdAt: new Date().toISOString(), status: 'novo', type, payment,
+      id: uid('o'), createdAt: new Date().toISOString(), status: 'novo', type, payment,
       customer: { name, phone, address: type === 'delivery' ? address : '' },
       items: state.cart.map((i) => ({
         productId: i.productId, name: i.name, qty: i.qty, price: i.unitPrice,
@@ -1041,8 +1175,29 @@ function openCheckout() {
       statusHistory: [{ status: 'novo', at: new Date().toISOString() }]
     };
 
+    const submitBtn = $('#coSubmit');
+    const submitLabel = submitBtn ? submitBtn.innerHTML : '';
+    if (state.cloud) {
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Enviando pedido...'; }
+      try {
+        const created = await cloudRpc('de_create_order', { payload: order });
+        order.code = created.code;
+        order.createdAt = created.createdAt || order.createdAt;
+        order.status = created.status || 'novo';
+      } catch (err) {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = submitLabel; }
+        toast('Não foi possível enviar o pedido. Verifique sua conexão e tente novamente.', 'error');
+        return;
+      }
+    } else {
+      order.code = (data.meta.seq = (data.meta.seq || 1000) + 1);
+    }
+
     data.orders.unshift(order);
-    if (summary.coupon) summary.coupon.uses = (summary.coupon.uses || 0) + 1;
+    if (summary.coupon) {
+      summary.coupon.uses = (summary.coupon.uses || 0) + 1;
+      if (state.cloud) cloudRpc('de_coupon_used', { p_code: summary.coupon.code }).catch(() => {});
+    }
     state.customer = { name, phone, address };
     try { localStorage.setItem(CUST_KEY, JSON.stringify(state.customer)); } catch (e) { /* ignore */ }
     saveData();
@@ -1106,9 +1261,15 @@ function showOrderSuccess(order) {
     </div>`, 'narrow');
 }
 
-function openTrackOrder(id) {
-  const order = data.orders.find((o) => o.id === id);
-  if (!order) return;
+async function openTrackOrder(id) {
+  let order = data.orders.find((o) => o.id === id);
+  if (!order && state.cloud) {
+    try {
+      order = await cloudRpc('de_order_track', { p_id: id });
+      if (order) data.orders.push(order);
+    } catch (e) { order = null; }
+  }
+  if (!order) { toast('Não foi possível carregar o pedido.', 'error'); return; }
   openModal(`
     <button class="modal-close" type="button" data-act="close-modal" aria-label="Fechar">${icon('x')}</button>
     <div class="co-head">
@@ -1130,7 +1291,8 @@ function openTrackOrder(id) {
     </div>`, 'narrow');
 }
 
-function openMyOrders() {
+async function openMyOrders() {
+  if (state.cloud) await ensureMyOrders();
   const ids = myOrderIds();
   const orders = ids.map((id) => data.orders.find((o) => o.id === id)).filter(Boolean);
   openModal(`
@@ -1138,7 +1300,7 @@ function openMyOrders() {
     <div class="co-head">
       <span class="eyebrow">${icon('bag')} histórico</span>
       <h2>Meus pedidos</h2>
-      <p>Acompanhe o status dos seus pedidos neste dispositivo.</p>
+      <p>Acompanhe o status dos seus pedidos a qualquer momento.</p>
     </div>
     <div class="my-orders">
       ${orders.length ? orders.map((o) => `
@@ -1184,12 +1346,24 @@ function openRating(orderId) {
     rating = Number(btn.dataset.rate);
     $$('#rateStars [data-rate]').forEach((b) => b.classList.toggle('on', Number(b.dataset.rate) <= rating));
   }));
-  $('#rateSubmit').addEventListener('click', () => {
+  $('#rateSubmit').addEventListener('click', async () => {
     const name = $('#rateName').value.trim() || order.customer.name || 'Cliente';
     const text = $('#rateText').value.trim() || 'Adorei o pedido! Tudo feito com muito carinho.';
-    data.reviews.unshift({ id: uid('r'), orderId: order.id, name, rating, text, date: new Date().toISOString() });
+    const review = { id: uid('r'), orderId: order.id, name, rating, text, date: new Date().toISOString() };
+    if (state.cloud) {
+      const btn = $('#rateSubmit');
+      if (btn) { btn.disabled = true; btn.textContent = 'Enviando...'; }
+      try {
+        await cloudRpc('de_rate_order', { p_order_id: order.id, p_review: review });
+      } catch (err) {
+        if (btn) { btn.disabled = false; btn.innerHTML = 'Enviar avaliação'; }
+        toast('Não foi possível enviar a avaliação. Tente novamente.', 'error');
+        return;
+      }
+    }
+    data.reviews.unshift(review);
     order.rated = true;
-    saveData();
+    try { localStorage.setItem(DB_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
     closeModal();
     renderReviews();
     applySettings();
@@ -1219,6 +1393,22 @@ function goStore() {
   location.hash = '#/';
 }
 
+function startAdminPolling() {
+  stopAdminPolling();
+  if (!state.cloud) return;
+  state.adminTimer = setInterval(async () => {
+    if ($('#viewAdmin').hidden || !state.adminAuthed || !state.cloud) return;
+    if (!$('#modalLayer').hidden) return;
+    if (!['visao', 'pedidos', 'avaliacoes'].includes(state.adminTab)) return;
+    const ok = await cloudLoadAdmin(true);
+    if (ok) renderAdmin();
+  }, 20000);
+}
+function stopAdminPolling() {
+  clearInterval(state.adminTimer);
+  state.adminTimer = null;
+}
+
 function applyRoute() {
   const isAdmin = location.hash.startsWith('#/admin');
   $('#viewLoja').hidden = isAdmin;
@@ -1229,11 +1419,14 @@ function applyRoute() {
     if (state.adminAuthed) {
       $('#adminLock').hidden = true;
       renderAdmin();
+      startAdminPolling();
     } else {
       $('#adminLock').hidden = false;
+      stopAdminPolling();
       setTimeout(() => $('#pinInput').focus(), 80);
     }
   } else {
+    stopAdminPolling();
     applySettings();
     renderCategoryNav();
     renderMenu();
@@ -1540,13 +1733,21 @@ function openAdminOrder(id) {
     </div>`, 'wide');
 }
 
-function setOrderStatus(id, status) {
+async function setOrderStatus(id, status) {
   const o = data.orders.find((x) => x.id === id);
   if (!o) return;
+  if (state.cloud) {
+    try {
+      await cloudRpc('de_admin_set_status', { p_pin: adminPin(), p_id: id, p_status: status });
+    } catch (e) {
+      toast('Não foi possível atualizar o pedido online.', 'error');
+      return;
+    }
+  }
   o.status = status;
   o.statusHistory = o.statusHistory || [];
   o.statusHistory.push({ status, at: new Date().toISOString() });
-  saveData();
+  try { localStorage.setItem(DB_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
   closeModal();
   renderAdmin();
   toast(`Pedido #${o.code}: ${STATUS_LABEL[status]}`);
@@ -2242,9 +2443,9 @@ function adminSettingsHTML() {
 
         <section class="settings-card">
           <h3>Segurança</h3>
-          <p>PIN de acesso ao painel.</p>
+          <p>PIN de acesso ao painel, verificado na nuvem.</p>
           <div class="field"><label for="stPin">Novo PIN (4 a 8 dígitos)</label><input id="stPin" name="newPin" inputmode="numeric" maxlength="8" placeholder="Deixe vazio para manter ${'•'.repeat(4)}"></div>
-          <p style="font-size:11px;color:var(--muted-2);margin-top:8px;">O PIN atual é usado no acesso ao painel. Guarde em local seguro.</p>
+          <p style="font-size:11px;color:var(--muted-2);margin-top:8px;">Recomendamos um PIN de 6 a 8 dígitos. Ele protege o painel e as alterações do cardápio em todos os aparelhos.</p>
         </section>
 
         <section class="settings-card">
@@ -2255,7 +2456,7 @@ function adminSettingsHTML() {
             <label class="btn btn-soft btn-sm" style="cursor:pointer;">${icon('upload')} Restaurar backup<input type="file" id="importFile" accept="application/json" hidden></label>
             <button class="btn btn-danger btn-sm" type="button" data-act="restore-demo">${icon('trash')} Restaurar demonstração</button>
           </div>
-          <p style="font-size:11px;color:var(--muted-2);margin-top:10px;">Os pedidos ficam salvos neste dispositivo/navegador.</p>
+          <p style="font-size:11px;color:var(--muted-2);margin-top:10px;">${state.cloud ? 'Pedidos, cardápio e avaliações ficam salvos na nuvem e aparecem em qualquer aparelho.' : 'Modo local: sem conexão com a nuvem no momento. Os dados ficam apenas neste navegador.'}</p>
         </section>
       </div>
 
@@ -2297,7 +2498,7 @@ function bindSettingsForm() {
     });
   }
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(form);
     const s = data.settings;
@@ -2329,7 +2530,6 @@ function bindSettingsForm() {
     const pin = String(fd.get('newPin') || '').trim();
     if (pin) {
       if (!/^\d{4,8}$/.test(pin)) { toast('O PIN deve ter de 4 a 8 dígitos.', 'error'); return; }
-      s.adminPin = pin;
     }
     if (!s.payment.pix && !s.payment.card && !s.payment.cash) {
       toast('Ative pelo menos uma forma de pagamento.', 'error');
@@ -2338,7 +2538,25 @@ function bindSettingsForm() {
     if (s.whatsapp.length < 10) { toast('Informe o WhatsApp com DDI e DDD, ex.: 5521999990000.', 'error'); return; }
     if (s.etaMax < s.etaMin) s.etaMax = s.etaMin;
 
+    if (pin && state.cloud) {
+      try {
+        await cloudRpc('de_admin_change_pin', { p_pin: adminPin(), p_new: pin });
+      } catch (err) {
+        toast('Não foi possível alterar o PIN online.', 'error');
+        return;
+      }
+    }
+    if (pin) {
+      s.adminPin = pin;
+      state.adminPin = pin;
+      sessionStorage.setItem(PIN_KEY, pin);
+    }
+
     saveData();
+    if (state.cloud) {
+      const ok = await pushCatalog();
+      if (!ok) return;
+    }
     applySettings();
     renderCart();
     renderAdmin();
@@ -2539,9 +2757,14 @@ function handleAction(act, el) {
     case 'export-xlsx': exportXLSX(); break;
     case 'export-pdf': exportPDF(); break;
     case 'del-review': {
-      confirmDialog('Excluir avaliação?', 'A avaliação será removida da loja.', 'Excluir', () => {
+      confirmDialog('Excluir avaliação?', 'A avaliação será removida da loja.', 'Excluir', async () => {
+        if (state.cloud) {
+          try { await cloudRpc('de_admin_delete_review', { p_pin: adminPin(), p_id: id }); }
+          catch (e) { toast('Não foi possível excluir a avaliação online.', 'error'); return; }
+        }
         data.reviews = data.reviews.filter((r) => r.id !== id);
-        saveData(); renderAdmin(); renderReviews(); applySettings(); toast('Avaliação excluída.');
+        try { localStorage.setItem(DB_KEY, JSON.stringify(data)); } catch (e) { /* ignore */ }
+        renderAdmin(); renderReviews(); applySettings(); toast('Avaliação excluída.');
       });
       break;
     }
@@ -2629,16 +2852,21 @@ function bindGlobal() {
     renderAdmin();
   }));
 
-  $('#lockForm').addEventListener('submit', (e) => {
+  $('#lockForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const pin = $('#pinInput').value.trim();
-    if (pin === String(data.settings.adminPin)) {
-      state.adminAuthed = true;
-      sessionStorage.setItem(SESSION_KEY, '1');
+    if (!pin) return;
+    const btn = $('#lockForm button[type="submit"]');
+    const label = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Verificando...'; }
+    const ok = await adminLogin(pin);
+    if (btn) { btn.disabled = false; btn.innerHTML = label; }
+    if (ok) {
       $('#lockError').textContent = '';
       $('#pinInput').value = '';
       $('#adminLock').hidden = true;
       renderAdmin();
+      startAdminPolling();
       toast('Bem-vinda ao seu painel!');
     } else {
       $('#lockError').textContent = 'PIN incorreto. Tente novamente.';
@@ -2659,7 +2887,7 @@ function bindGlobal() {
 /* ------------------------------------------------------------
    19. Inicialização
    ------------------------------------------------------------ */
-function init() {
+async function init() {
   data = loadData();
   state.cart = loadJSON(CART_KEY, []);
   if (!Array.isArray(state.cart)) state.cart = [];
@@ -2668,6 +2896,7 @@ function init() {
   state.favs = new Set(loadJSON(FAV_KEY, []));
   state.customer = loadJSON(CUST_KEY, {}) || {};
   state.adminAuthed = sessionStorage.getItem(SESSION_KEY) === '1';
+  state.adminPin = sessionStorage.getItem(PIN_KEY) || '';
 
   const fab = document.createElement('button');
   fab.id = 'cartFab';
@@ -2677,6 +2906,14 @@ function init() {
   $('#viewLoja').appendChild(fab);
 
   bindGlobal();
+  await cloudBootstrap();
+
+  if (state.adminAuthed && state.cloud && !state.adminPin) {
+    state.adminAuthed = false;
+    sessionStorage.removeItem(SESSION_KEY);
+  }
+  if (state.adminAuthed && state.cloud) await cloudLoadAdmin(true);
+
   refreshStorefront();
   applyRoute();
 }
