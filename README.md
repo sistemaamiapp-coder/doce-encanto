@@ -20,7 +20,7 @@ Loja online completa para confeitaria: cardápio com fotos, carrinho, checkout c
 
 ## Como publicar alterações
 
-Qualquer alteração enviada para a branch `main` é publicada automaticamente via GitHub Actions (workflow **Publicar site**). Basta fazer commit e `git push`.
+Qualquer alteração enviada para a branch `main` é publicada automaticamente pelo GitHub Pages. Basta fazer commit e `git push`.
 
 ## Tecnologia
 

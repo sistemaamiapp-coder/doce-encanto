@@ -691,6 +691,7 @@ function updateCartBadges() {
   const count = cartCount();
   const badge = $('#cartCount');
   badge.textContent = count;
+  badge.hidden = count === 0;
   badge.classList.remove('bump');
   void badge.offsetWidth;
   badge.classList.add('bump');
