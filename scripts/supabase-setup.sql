@@ -254,6 +254,14 @@ begin
   delete from de_reviews where id = p_id;
 end $$;
 
+-- Exclusão de pedido (manutenção)
+create or replace function public.de_admin_delete_order(p_pin text, p_id text)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not de_check_pin(p_pin) then raise exception 'pin_invalido'; end if;
+  delete from de_orders where id = p_id;
+end $$;
+
 -- Troca do PIN do administrador
 create or replace function public.de_admin_change_pin(p_pin text, p_new text)
 returns void language plpgsql security definer set search_path = public as $$
@@ -295,6 +303,9 @@ grant execute on function public.de_admin_set_status(text, text, text) to anon;
 
 revoke all on function public.de_admin_delete_review(text, text) from public;
 grant execute on function public.de_admin_delete_review(text, text) to anon;
+
+revoke all on function public.de_admin_delete_order(text, text) from public;
+grant execute on function public.de_admin_delete_order(text, text) to anon;
 
 revoke all on function public.de_admin_change_pin(text, text) from public;
 grant execute on function public.de_admin_change_pin(text, text) to anon;
