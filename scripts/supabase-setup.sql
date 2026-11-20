@@ -127,6 +127,8 @@ declare
   v_code int;
   v_now timestamptz := now();
   v_items jsonb := coalesce(payload->'items', '[]'::jsonb);
+  v_status text;
+  v_created timestamptz;
 begin
   if jsonb_typeof(payload) <> 'object' then raise exception 'pedido_invalido'; end if;
   if jsonb_array_length(v_items) < 1 or jsonb_array_length(v_items) > 60 then raise exception 'itens_invalidos'; end if;
@@ -144,7 +146,14 @@ begin
         'statusHistory', jsonb_build_array(jsonb_build_object('status', 'novo', 'at', v_now)),
         'rated', false
       )
-  );
+  )
+  on conflict (id) do nothing;
+
+  if not found then
+    select code, status, created_at into v_code, v_status, v_created
+    from de_orders where id = v_id;
+    return jsonb_build_object('id', v_id, 'code', v_code, 'status', v_status, 'createdAt', v_created);
+  end if;
 
   return jsonb_build_object('id', v_id, 'code', v_code, 'status', 'novo', 'createdAt', v_now);
 end $$;

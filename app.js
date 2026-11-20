@@ -2847,9 +2847,13 @@ function bindGlobal() {
     toast(e.target.checked ? 'Loja aberta para pedidos.' : 'Loja pausada.');
   });
 
-  $$('#adminNav button').forEach((btn) => btn.addEventListener('click', () => {
+  $$('#adminNav button').forEach((btn) => btn.addEventListener('click', async () => {
     state.adminTab = btn.dataset.tab;
     renderAdmin();
+    if (state.cloud && ['visao', 'pedidos', 'avaliacoes'].includes(state.adminTab)) {
+      const ok = await cloudLoadAdmin(true);
+      if (ok && state.adminTab === btn.dataset.tab) renderAdmin();
+    }
   }));
 
   $('#lockForm').addEventListener('submit', async (e) => {
