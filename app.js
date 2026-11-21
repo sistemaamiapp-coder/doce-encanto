@@ -53,6 +53,7 @@ const MY_KEY = 'doceEncanto.myorders.v1';
 const CUST_KEY = 'doceEncanto.customer.v1';
 const SESSION_KEY = 'doceEncanto.session.v1';
 const PIN_KEY = 'doceEncanto.pin.v1';
+const ADMIN_TAB_KEY = 'doceEncanto.adminTab.v1';
 const GEO_KEY = 'doceEncanto.geo.v1';
 
 /* Banco online (Supabase). A chave publicável é pública por design. */
@@ -3090,8 +3091,12 @@ function bindGlobal() {
   $('#btnLockBack').addEventListener('click', goStore);
   $('#btnSairAdmin').addEventListener('click', () => {
     state.adminAuthed = false;
+    state.adminPin = '';
+    state.adminTab = 'visao';
     sessionStorage.removeItem(SESSION_KEY);
-    $('#adminLock').hidden = false;
+    sessionStorage.removeItem(PIN_KEY);
+    sessionStorage.removeItem(ADMIN_TAB_KEY);
+    goStore();
     toast('Você saiu do painel.');
   });
   $('#storeOpenToggle').addEventListener('change', (e) => {
@@ -3104,6 +3109,7 @@ function bindGlobal() {
 
   $$('#adminNav button').forEach((btn) => btn.addEventListener('click', async () => {
     state.adminTab = btn.dataset.tab;
+    sessionStorage.setItem(ADMIN_TAB_KEY, state.adminTab);
     renderAdmin();
     if (state.cloud && ['visao', 'pedidos', 'avaliacoes'].includes(state.adminTab)) {
       const ok = await cloudLoadAdmin(true);
@@ -3156,6 +3162,8 @@ async function init() {
   state.customer = loadJSON(CUST_KEY, {}) || {};
   state.adminAuthed = sessionStorage.getItem(SESSION_KEY) === '1';
   state.adminPin = sessionStorage.getItem(PIN_KEY) || '';
+  const savedTab = sessionStorage.getItem(ADMIN_TAB_KEY);
+  if (savedTab && ADMIN_TITLES[savedTab]) state.adminTab = savedTab;
 
   const fab = document.createElement('button');
   fab.id = 'cartFab';
