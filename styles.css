@@ -295,6 +295,7 @@ b, strong { font-weight: 700; }
 .cat-nav {
   display: flex; gap: 8px; overflow-x: auto;
   padding: 4px 0 13px;
+  justify-content: center;
   scrollbar-width: none;
 }
 .cat-nav::-webkit-scrollbar { display: none; }
@@ -1264,6 +1265,7 @@ table.data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-
 
 @media (max-width: 620px) {
   .topbar-inner, .shop-main, .footer-inner { width: calc(100% - 32px); }
+  .cat-nav { justify-content: flex-start; }
   .promo-track { font-size: 10px; gap: 30px; }
   .brand-name { font-size: 19px; }
   .brand-tag { font-size: 9px; }
