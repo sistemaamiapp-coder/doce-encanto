@@ -70,7 +70,7 @@ const APP_IMAGES = [
 ];
 const DEFAULT_GALLERY = APP_IMAGES.slice(0, 12);
 
-const PAY_LABEL = { pix: 'Pix', card: 'Cartão na entrega', cash: 'Dinheiro' };
+const PAY_LABEL = { pix: 'Pix', card: 'Cartão (débito ou crédito)', cash: 'Dinheiro' };
 const TYPE_LABEL = { delivery: 'Entrega', pickup: 'Retirada' };
 const STATUS_LABEL = {
   novo: 'Novo', preparo: 'Em preparo', pronto: 'Pronto', entrega: 'Em rota',
@@ -2540,7 +2540,7 @@ function adminSettingsHTML() {
             </div>
             <div class="check-row">
               <label class="check-line"><input type="checkbox" name="payPix" ${s.payment.pix ? 'checked' : ''}> Pix</label>
-              <label class="check-line"><input type="checkbox" name="payCard" ${s.payment.card ? 'checked' : ''}> Cartão na entrega</label>
+              <label class="check-line"><input type="checkbox" name="payCard" ${s.payment.card ? 'checked' : ''}> Cartão (débito ou crédito)</label>
               <label class="check-line"><input type="checkbox" name="payCash" ${s.payment.cash ? 'checked' : ''}> Dinheiro</label>
             </div>
             <p style="font-size:11px;color:var(--muted-2);margin-top:10px;">Deixe pelo menos uma forma ativa.</p>
