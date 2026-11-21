@@ -2519,8 +2519,10 @@ function adminSettingsHTML() {
     <form id="settingsForm">
       <div class="settings-grid">
           <section class="settings-card">
-            <h3>Identidade da loja</h3>
-            <p>Como sua marca aparece para os clientes.</p>
+            <div class="settings-card-head">
+              <div><h3>Identidade da loja</h3><p>Como sua marca aparece para os clientes.</p></div>
+              <button class="btn btn-soft btn-sm" type="submit" data-save="Identidade da loja">Salvar</button>
+            </div>
             <div class="form-grid">
               <div class="field"><label for="stName">Nome da loja</label><input id="stName" name="storeName" required maxlength="40" value="${esc(s.storeName)}"></div>
               <div class="field"><label for="stTag">Slogan</label><input id="stTag" name="tagline" maxlength="40" value="${esc(s.tagline)}"></div>
@@ -2532,8 +2534,10 @@ function adminSettingsHTML() {
           </section>
 
           <section class="settings-card">
-            <h3>Pagamentos</h3>
-            <p>Formas aceitas no checkout.</p>
+            <div class="settings-card-head">
+              <div><h3>Pagamentos</h3><p>Formas aceitas no checkout.</p></div>
+              <button class="btn btn-soft btn-sm" type="submit" data-save="Pagamentos">Salvar</button>
+            </div>
             <div class="check-row">
               <label class="check-line"><input type="checkbox" name="payPix" ${s.payment.pix ? 'checked' : ''}> Pix</label>
               <label class="check-line"><input type="checkbox" name="payCard" ${s.payment.card ? 'checked' : ''}> Cartão na entrega</label>
@@ -2543,8 +2547,10 @@ function adminSettingsHTML() {
           </section>
 
           <section class="settings-card">
-            <h3>Entrega e operação</h3>
-            <p>Defina como o cliente recebe o pedido e a área atendida.</p>
+            <div class="settings-card-head">
+              <div><h3>Entrega e operação</h3><p>Defina como o cliente recebe o pedido e a área atendida.</p></div>
+              <button class="btn btn-soft btn-sm" type="submit" data-save="Entrega e operação">Salvar</button>
+            </div>
             <div class="form-grid grid-3">
               <div class="field"><label for="stMode">Status</label>
                 <select id="stMode" name="openMode">
@@ -2573,8 +2579,10 @@ function adminSettingsHTML() {
           </section>
 
           <section class="settings-card">
-            <h3>Horário de funcionamento</h3>
-            <p>Usado quando o status está em “Seguir horário”.</p>
+            <div class="settings-card-head">
+              <div><h3>Horário de funcionamento</h3><p>Usado quando o status está em “Seguir horário”.</p></div>
+              <button class="btn btn-soft btn-sm" type="submit" data-save="Horário de funcionamento">Salvar</button>
+            </div>
             <div class="hours-grid">
               ${WEEK.map((day, i) => {
                 const h = s.hours[i];
@@ -2588,8 +2596,10 @@ function adminSettingsHTML() {
           </section>
 
           <section class="settings-card">
-            <h3>Segurança</h3>
-            <p>PIN de acesso ao painel, verificado na nuvem.</p>
+            <div class="settings-card-head">
+              <div><h3>Segurança</h3><p>PIN de acesso ao painel, verificado na nuvem.</p></div>
+              <button class="btn btn-soft btn-sm" type="submit" data-save="Segurança">Salvar</button>
+            </div>
             <div class="field"><label for="stPin">Novo PIN (4 a 8 dígitos)</label><input id="stPin" name="newPin" inputmode="numeric" maxlength="8" placeholder="Deixe vazio para manter ${'•'.repeat(4)}"></div>
             <p style="font-size:11px;color:var(--muted-2);margin-top:8px;">Recomendamos um PIN de 6 a 8 dígitos. Ele protege o painel e as alterações do cardápio em todos os aparelhos.</p>
           </section>
@@ -2606,8 +2616,10 @@ function adminSettingsHTML() {
           </section>
 
         <section class="settings-card full">
-          <h3>Destaque da loja</h3>
-          <p>Textos e imagem da página inicial.</p>
+          <div class="settings-card-head">
+            <div><h3>Destaque da loja</h3><p>Textos e imagem da página inicial.</p></div>
+            <button class="btn btn-soft btn-sm" type="submit" data-save="Destaque da loja">Salvar</button>
+          </div>
           <div class="form-grid">
             <div class="field"><label for="stHeroBadge">Selo do destaque</label><input id="stHeroBadge" name="heroBadge" maxlength="40" value="${esc(s.hero.badge)}"></div>
             <div class="field"><label for="stHeroTitle">Título</label><input id="stHeroTitle" name="heroTitle" maxlength="80" value="${esc(s.hero.title)}"></div>
@@ -2627,7 +2639,7 @@ function adminSettingsHTML() {
       </div>
 
       <div class="settings-actions" style="margin-top:18px;">
-        <button class="btn btn-primary btn-lg" type="submit">${icon('check')} Salvar alterações</button>
+        <button class="btn btn-primary btn-lg" type="submit">${icon('check')} Salvar todas as alterações</button>
       </div>
     </form>`;
 }
@@ -2658,7 +2670,7 @@ function bindSettingsForm() {
         }
         gallery.push(dataUrl);
         setHeroGallery(gallery, dataUrl);
-        toast('Imagem adicionada — clique em Salvar alterações para aplicar.');
+        toast('Imagem adicionada — clique em Salvar para aplicar.');
       } catch (err) {
         toast('Não foi possível usar essa imagem. Escolha um JPG ou PNG de até 6 MB.', 'error');
       } finally {
@@ -2693,6 +2705,7 @@ function bindSettingsForm() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const fd = new FormData(form);
+    const saveLabel = e.submitter && e.submitter.dataset ? String(e.submitter.dataset.save || '') : '';
     const s = data.settings;
     const prevAddress = s.address;
     s.storeName = String(fd.get('storeName') || s.storeName).trim();
@@ -2788,11 +2801,11 @@ function bindSettingsForm() {
     renderCart();
     renderAdmin();
     if (geoFailed) {
-      toast('Configurações salvas, mas não foi possível localizar o endereço. Confira o endereço da loja ou tente salvar novamente.', 'error');
-    } else if (s.deliveryEnabled && s.deliveryRadiusKm > 0 && s.storeLat != null) {
-      toast(`Configurações salvas! Raio de ${String(s.deliveryRadiusKm).replace('.', ',')} km ativo a partir do endereço da loja.`);
+      toast(`${saveLabel ? saveLabel + ': ' : ''}configurações salvas, mas não foi possível localizar o endereço. Confira o endereço da loja ou tente salvar novamente.`, 'error');
+    } else if (saveLabel === 'Entrega e operação' && s.deliveryEnabled && s.deliveryRadiusKm > 0 && s.storeLat != null) {
+      toast(`Entrega e operação — Configurações salvas! Raio de ${String(s.deliveryRadiusKm).replace('.', ',')} km ativo a partir do endereço da loja.`);
     } else {
-      toast('Configurações salvas!');
+      toast(saveLabel ? `${saveLabel} — alterações salvas.` : 'Configurações salvas!');
     }
   });
 }
@@ -2925,7 +2938,7 @@ function handleAction(act, el) {
       if (!gallery.length) { toast('Mantenha pelo menos uma imagem na galeria.', 'error'); break; }
       const current = $('#heroImageInput') ? $('#heroImageInput').value : '';
       setHeroGallery(gallery, current !== src && gallery.includes(current) ? current : gallery[0]);
-      toast('Imagem removida — clique em Salvar alterações para aplicar.');
+      toast('Imagem removida — clique em Salvar para aplicar.');
       break;
     }
     case 'add-size': {
