@@ -2518,72 +2518,92 @@ function adminSettingsHTML() {
   return `
     <form id="settingsForm">
       <div class="settings-grid">
-        <section class="settings-card">
-          <h3>Identidade da loja</h3>
-          <p>Como sua marca aparece para os clientes.</p>
-          <div class="form-grid">
-            <div class="field"><label for="stName">Nome da loja</label><input id="stName" name="storeName" required maxlength="40" value="${esc(s.storeName)}"></div>
-            <div class="field"><label for="stTag">Slogan</label><input id="stTag" name="tagline" maxlength="40" value="${esc(s.tagline)}"></div>
-            <div class="field"><label for="stPhone">Telefone</label><input id="stPhone" name="phone" maxlength="20" value="${esc(s.phone)}"></div>
-            <div class="field"><label for="stWhats">WhatsApp (só números)</label><input id="stWhats" name="whatsapp" maxlength="20" value="${esc(s.whatsapp)}" placeholder="5521999990000"></div>
-            <div class="field"><label for="stInsta">Instagram</label><input id="stInsta" name="instagram" maxlength="40" value="${esc(s.instagram)}"></div>
-            <div class="field"><label for="stPix">Chave Pix</label><input id="stPix" name="pixKey" maxlength="80" value="${esc(s.pixKey)}"></div>
-          </div>
-        </section>
-
-        <section class="settings-card">
-          <h3>Entrega e operação</h3>
-          <p>Defina como o cliente recebe o pedido e a área atendida.</p>
-          <div class="form-grid">
-            <div class="field"><label for="stMode">Status</label>
-              <select id="stMode" name="openMode">
-                <option value="auto"${s.openMode === 'auto' ? ' selected' : ''}>Seguir horário</option>
-                <option value="open"${s.openMode === 'open' ? ' selected' : ''}>Sempre aberta</option>
-                <option value="closed"${s.openMode === 'closed' ? ' selected' : ''}>Pausada</option>
-              </select>
+          <section class="settings-card">
+            <h3>Identidade da loja</h3>
+            <p>Como sua marca aparece para os clientes.</p>
+            <div class="form-grid">
+              <div class="field"><label for="stName">Nome da loja</label><input id="stName" name="storeName" required maxlength="40" value="${esc(s.storeName)}"></div>
+              <div class="field"><label for="stTag">Slogan</label><input id="stTag" name="tagline" maxlength="40" value="${esc(s.tagline)}"></div>
+              <div class="field"><label for="stPhone">Telefone</label><input id="stPhone" name="phone" maxlength="20" value="${esc(s.phone)}"></div>
+              <div class="field"><label for="stWhats">WhatsApp (só números)</label><input id="stWhats" name="whatsapp" maxlength="20" value="${esc(s.whatsapp)}" placeholder="5521999990000"></div>
+              <div class="field"><label for="stInsta">Instagram</label><input id="stInsta" name="instagram" maxlength="40" value="${esc(s.instagram)}"></div>
+              <div class="field"><label for="stPix">Chave Pix</label><input id="stPix" name="pixKey" maxlength="80" value="${esc(s.pixKey)}"></div>
             </div>
-            <div class="field"><label for="stEtaMin">Tempo mínimo (min)</label><input id="stEtaMin" name="etaMin" type="number" min="0" value="${s.etaMin}"></div>
-            <div class="field"><label for="stEtaMax">Tempo máximo (min)</label><input id="stEtaMax" name="etaMax" type="number" min="0" value="${s.etaMax}"></div>
-            <div class="field span-2">
-              <label class="check-line"><input type="checkbox" name="deliveryEnabled" ${s.deliveryEnabled !== false ? 'checked' : ''}> Oferecer entrega nos pedidos</label>
-              <p style="font-size:11px;color:var(--muted-2);margin-top:4px;">Se desativar, o checkout aceita apenas retirada no balcão.</p>
+          </section>
+
+          <section class="settings-card">
+            <h3>Entrega e operação</h3>
+            <p>Defina como o cliente recebe o pedido e a área atendida.</p>
+            <div class="form-grid grid-3">
+              <div class="field"><label for="stMode">Status</label>
+                <select id="stMode" name="openMode">
+                  <option value="auto"${s.openMode === 'auto' ? ' selected' : ''}>Seguir horário</option>
+                  <option value="open"${s.openMode === 'open' ? ' selected' : ''}>Sempre aberta</option>
+                  <option value="closed"${s.openMode === 'closed' ? ' selected' : ''}>Pausada</option>
+                </select>
+              </div>
+              <div class="field"><label for="stEtaMin">Tempo mínimo (min)</label><input id="stEtaMin" name="etaMin" type="number" min="0" value="${s.etaMin}"></div>
+              <div class="field"><label for="stEtaMax">Tempo máximo (min)</label><input id="stEtaMax" name="etaMax" type="number" min="0" value="${s.etaMax}"></div>
             </div>
-            <div class="field"><label for="stFee">Taxa de entrega (R$)</label><input id="stFee" name="deliveryFee" type="number" min="0" step="0.01" value="${s.deliveryFee}"></div>
-            <div class="field"><label for="stFree">Frete grátis acima de (R$)</label><input id="stFree" name="freeFrom" type="number" min="0" step="0.01" value="${s.freeFrom}"></div>
-            <div class="field"><label for="stMin">Pedido mínimo (R$)</label><input id="stMin" name="minOrder" type="number" min="0" step="0.01" value="${s.minOrder}"></div>
-            <div class="field"><label for="stRadius">Raio máximo de entrega (km)</label><input id="stRadius" name="deliveryRadiusKm" type="number" min="0" step="0.5" value="${s.deliveryRadiusKm}"><small style="font-size:10.5px;color:var(--muted-2);">Use 0 para não limitar.</small></div>
-            <div class="field span-2"><label for="stAddr">Endereço da loja (origem do raio)</label><input id="stAddr" name="address" maxlength="140" value="${esc(s.address)}" placeholder="Rua, número, bairro, cidade"></div>
-            <div class="geo-status">${s.storeLat != null && s.geoAddress === s.address
-              ? `Origem do raio localizada (${s.storeLat.toFixed(4)}, ${s.storeLng.toFixed(4)}). Ao alterar o endereço, a localização é atualizada automaticamente.`
-              : 'O endereço será localizado automaticamente ao salvar. O limite por distância fica ativo somente depois da localização.'}</div>
-          </div>
-        </section>
+            <div class="form-grid">
+              <div class="field span-2">
+                <label class="check-line"><input type="checkbox" name="deliveryEnabled" ${s.deliveryEnabled !== false ? 'checked' : ''}> Oferecer entrega nos pedidos</label>
+                <p style="font-size:11px;color:var(--muted-2);margin-top:4px;">Se desativar, o checkout aceita apenas retirada no balcão.</p>
+              </div>
+              <div class="field"><label for="stFee">Taxa de entrega (R$)</label><input id="stFee" name="deliveryFee" type="number" min="0" step="0.01" value="${s.deliveryFee}"></div>
+              <div class="field"><label for="stFree">Frete grátis acima de (R$)</label><input id="stFree" name="freeFrom" type="number" min="0" step="0.01" value="${s.freeFrom}"></div>
+              <div class="field"><label for="stMin">Pedido mínimo (R$)</label><input id="stMin" name="minOrder" type="number" min="0" step="0.01" value="${s.minOrder}"></div>
+              <div class="field"><label for="stRadius">Raio máximo de entrega (km)</label><input id="stRadius" name="deliveryRadiusKm" type="number" min="0" step="0.5" value="${s.deliveryRadiusKm}"><small style="font-size:10.5px;color:var(--muted-2);">Use 0 para não limitar.</small></div>
+              <div class="field span-2"><label for="stAddr">Endereço da loja (origem do raio)</label><input id="stAddr" name="address" maxlength="140" value="${esc(s.address)}" placeholder="Rua, número, bairro, cidade"></div>
+              <div class="geo-status">${s.storeLat != null && s.geoAddress === s.address
+                ? `Origem do raio localizada (${s.storeLat.toFixed(4)}, ${s.storeLng.toFixed(4)}). Ao alterar o endereço, a localização é atualizada automaticamente.`
+                : 'O endereço será localizado automaticamente ao salvar. O limite por distância fica ativo somente depois da localização.'}</div>
+            </div>
+          </section>
 
-        <section class="settings-card">
-          <h3>Horário de funcionamento</h3>
-          <p>Usado quando o status está em “Seguir horário”.</p>
-          <div class="hours-grid">
-            ${WEEK.map((day, i) => {
-              const h = s.hours[i];
-              return `<div class="hour-row ${h ? '' : 'closed'}" data-day="${i}">
-                <span><label class="check-line" style="gap:6px;"><input type="checkbox" class="h-on" ${h ? 'checked' : ''}> ${day}</label></span>
-                <input type="time" class="h-open" value="${h ? esc(h[0]) : '09:00'}" ${h ? '' : 'disabled'}>
-                <input type="time" class="h-close" value="${h ? esc(h[1]) : '19:00'}" ${h ? '' : 'disabled'}>
-              </div>`;
-            }).join('')}
-          </div>
-        </section>
+          <section class="settings-card">
+            <h3>Pagamentos</h3>
+            <p>Formas aceitas no checkout.</p>
+            <div class="check-row">
+              <label class="check-line"><input type="checkbox" name="payPix" ${s.payment.pix ? 'checked' : ''}> Pix</label>
+              <label class="check-line"><input type="checkbox" name="payCard" ${s.payment.card ? 'checked' : ''}> Cartão na entrega</label>
+              <label class="check-line"><input type="checkbox" name="payCash" ${s.payment.cash ? 'checked' : ''}> Dinheiro</label>
+            </div>
+            <p style="font-size:11px;color:var(--muted-2);margin-top:10px;">Deixe pelo menos uma forma ativa.</p>
+          </section>
 
-        <section class="settings-card">
-          <h3>Pagamentos</h3>
-          <p>Formas aceitas no checkout.</p>
-          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:6px;">
-            <label class="check-line"><input type="checkbox" name="payPix" ${s.payment.pix ? 'checked' : ''}> Pix</label>
-            <label class="check-line"><input type="checkbox" name="payCard" ${s.payment.card ? 'checked' : ''}> Cartão na entrega</label>
-            <label class="check-line"><input type="checkbox" name="payCash" ${s.payment.cash ? 'checked' : ''}> Dinheiro</label>
-          </div>
-          <p style="font-size:11px;color:var(--muted-2);">Deixe pelo menos uma forma ativa.</p>
-        </section>
+          <section class="settings-card">
+            <h3>Horário de funcionamento</h3>
+            <p>Usado quando o status está em “Seguir horário”.</p>
+            <div class="hours-grid">
+              ${WEEK.map((day, i) => {
+                const h = s.hours[i];
+                return `<div class="hour-row ${h ? '' : 'closed'}" data-day="${i}">
+                  <span><label class="check-line" style="gap:6px;"><input type="checkbox" class="h-on" ${h ? 'checked' : ''}> ${day}</label></span>
+                  <input type="time" class="h-open" value="${h ? esc(h[0]) : '09:00'}" ${h ? '' : 'disabled'}>
+                  <input type="time" class="h-close" value="${h ? esc(h[1]) : '19:00'}" ${h ? '' : 'disabled'}>
+                </div>`;
+              }).join('')}
+            </div>
+          </section>
+
+          <section class="settings-card">
+            <h3>Segurança</h3>
+            <p>PIN de acesso ao painel, verificado na nuvem.</p>
+            <div class="field"><label for="stPin">Novo PIN (4 a 8 dígitos)</label><input id="stPin" name="newPin" inputmode="numeric" maxlength="8" placeholder="Deixe vazio para manter ${'•'.repeat(4)}"></div>
+            <p style="font-size:11px;color:var(--muted-2);margin-top:8px;">Recomendamos um PIN de 6 a 8 dígitos. Ele protege o painel e as alterações do cardápio em todos os aparelhos.</p>
+          </section>
+
+          <section class="settings-card">
+            <h3>Dados do sistema</h3>
+            <p>Backup e manutenção.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-soft btn-sm" type="button" data-act="backup">${icon('download')} Baixar backup</button>
+              <label class="btn btn-soft btn-sm" style="cursor:pointer;">${icon('upload')} Restaurar backup<input type="file" id="importFile" accept="application/json" hidden></label>
+              <button class="btn btn-danger btn-sm" type="button" data-act="restore-demo">${icon('trash')} Restaurar demonstração</button>
+            </div>
+            <p style="font-size:11px;color:var(--muted-2);margin-top:10px;">${state.cloud ? 'Pedidos, cardápio e avaliações ficam salvos na nuvem e aparecem em qualquer aparelho.' : 'Modo local: sem conexão com a nuvem no momento. Os dados ficam apenas neste navegador.'}</p>
+          </section>
 
         <section class="settings-card full">
           <h3>Destaque da loja</h3>
@@ -2603,24 +2623,6 @@ function adminSettingsHTML() {
               <input type="hidden" name="heroGallery" id="heroGalleryInput" value="${esc(JSON.stringify(s.hero.gallery))}">
             </div>
           </div>
-        </section>
-
-        <section class="settings-card">
-          <h3>Segurança</h3>
-          <p>PIN de acesso ao painel, verificado na nuvem.</p>
-          <div class="field"><label for="stPin">Novo PIN (4 a 8 dígitos)</label><input id="stPin" name="newPin" inputmode="numeric" maxlength="8" placeholder="Deixe vazio para manter ${'•'.repeat(4)}"></div>
-          <p style="font-size:11px;color:var(--muted-2);margin-top:8px;">Recomendamos um PIN de 6 a 8 dígitos. Ele protege o painel e as alterações do cardápio em todos os aparelhos.</p>
-        </section>
-
-        <section class="settings-card">
-          <h3>Dados do sistema</h3>
-          <p>Backup e manutenção.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn btn-soft btn-sm" type="button" data-act="backup">${icon('download')} Baixar backup</button>
-            <label class="btn btn-soft btn-sm" style="cursor:pointer;">${icon('upload')} Restaurar backup<input type="file" id="importFile" accept="application/json" hidden></label>
-            <button class="btn btn-danger btn-sm" type="button" data-act="restore-demo">${icon('trash')} Restaurar demonstração</button>
-          </div>
-          <p style="font-size:11px;color:var(--muted-2);margin-top:10px;">${state.cloud ? 'Pedidos, cardápio e avaliações ficam salvos na nuvem e aparecem em qualquer aparelho.' : 'Modo local: sem conexão com a nuvem no momento. Os dados ficam apenas neste navegador.'}</p>
         </section>
       </div>
 
