@@ -2532,6 +2532,17 @@ function adminSettingsHTML() {
           </section>
 
           <section class="settings-card">
+            <h3>Pagamentos</h3>
+            <p>Formas aceitas no checkout.</p>
+            <div class="check-row">
+              <label class="check-line"><input type="checkbox" name="payPix" ${s.payment.pix ? 'checked' : ''}> Pix</label>
+              <label class="check-line"><input type="checkbox" name="payCard" ${s.payment.card ? 'checked' : ''}> Cartão na entrega</label>
+              <label class="check-line"><input type="checkbox" name="payCash" ${s.payment.cash ? 'checked' : ''}> Dinheiro</label>
+            </div>
+            <p style="font-size:11px;color:var(--muted-2);margin-top:10px;">Deixe pelo menos uma forma ativa.</p>
+          </section>
+
+          <section class="settings-card">
             <h3>Entrega e operação</h3>
             <p>Defina como o cliente recebe o pedido e a área atendida.</p>
             <div class="form-grid grid-3">
@@ -2559,17 +2570,6 @@ function adminSettingsHTML() {
                 ? `Origem do raio localizada (${s.storeLat.toFixed(4)}, ${s.storeLng.toFixed(4)}). Ao alterar o endereço, a localização é atualizada automaticamente.`
                 : 'O endereço será localizado automaticamente ao salvar. O limite por distância fica ativo somente depois da localização.'}</div>
             </div>
-          </section>
-
-          <section class="settings-card">
-            <h3>Pagamentos</h3>
-            <p>Formas aceitas no checkout.</p>
-            <div class="check-row">
-              <label class="check-line"><input type="checkbox" name="payPix" ${s.payment.pix ? 'checked' : ''}> Pix</label>
-              <label class="check-line"><input type="checkbox" name="payCard" ${s.payment.card ? 'checked' : ''}> Cartão na entrega</label>
-              <label class="check-line"><input type="checkbox" name="payCash" ${s.payment.cash ? 'checked' : ''}> Dinheiro</label>
-            </div>
-            <p style="font-size:11px;color:var(--muted-2);margin-top:10px;">Deixe pelo menos uma forma ativa.</p>
           </section>
 
           <section class="settings-card">
