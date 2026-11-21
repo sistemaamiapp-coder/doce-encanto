@@ -1507,6 +1507,15 @@ function stopAdminPolling() {
   state.adminTimer = null;
 }
 
+function setAdminLock(locked) {
+  const view = $('#viewAdmin');
+  const shell = $('#viewAdmin .admin-shell');
+  if (shell) shell.hidden = locked;
+  view.classList.toggle('locked', locked);
+  $('#adminLock').hidden = !locked;
+  document.body.classList.toggle('no-scroll', locked);
+}
+
 function applyRoute() {
   const isAdmin = location.hash.startsWith('#/admin');
   $('#viewLoja').hidden = isAdmin;
@@ -1514,16 +1523,16 @@ function applyRoute() {
   const fab = $('#cartFab');
   if (fab) fab.style.display = isAdmin ? 'none' : '';
   if (isAdmin) {
+    setAdminLock(!state.adminAuthed);
     if (state.adminAuthed) {
-      $('#adminLock').hidden = true;
       renderAdmin();
       startAdminPolling();
     } else {
-      $('#adminLock').hidden = false;
       stopAdminPolling();
       setTimeout(() => $('#pinInput').focus(), 80);
     }
   } else {
+    document.body.classList.remove('no-scroll');
     stopAdminPolling();
     applySettings();
     renderCategoryNav();
@@ -3129,7 +3138,7 @@ function bindGlobal() {
     if (ok) {
       $('#lockError').textContent = '';
       $('#pinInput').value = '';
-      $('#adminLock').hidden = true;
+      setAdminLock(false);
       renderAdmin();
       startAdminPolling();
       toast('Bem-vinda ao seu painel!');
