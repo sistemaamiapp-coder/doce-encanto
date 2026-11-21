@@ -1,5 +1,5 @@
 -- ============================================================
--- Doce Encanto — banco online (Supabase)
+-- Amor em Pedaços — banco online (Supabase)
 -- Como aplicar: Supabase > SQL Editor > New query > colar > Run
 -- Pode executar mais de uma vez sem apagar dados existentes.
 -- ============================================================
