@@ -1,0 +1,179 @@
+/* ============================================================
+   Tema "Amor em Pedaços" — creme, vinho e rosa antigo
+   Complementa styles.css com a direção visual da confeitaria.
+   ============================================================ */
+body { font-size: 15px; }
+h1, h2, h3, h4 { font-weight: 600; letter-spacing: -.01em; }
+h1 { font-size: clamp(40px, 5.2vw, 68px); line-height: 1.03; font-weight: 500; }
+h2 { font-size: clamp(28px, 3vw, 40px); font-weight: 500; }
+h3 { font-weight: 600; }
+em {
+  font-style: italic; font-weight: 500;
+  color: var(--pink-deep);
+  background: none; -webkit-text-fill-color: currentColor;
+}
+
+/* interface em sans, títulos e preços em serif */
+.btn, .cat-btn, .status-pill, .promo-track, .brand-tag, .section-head small,
+.chip, .search-box input, .search-box kbd, .admin-nav button, .side-link,
+.switch-label, .footer-admin, .product-tag, .float-chip, .data-table th,
+.field > label, .field-label, .mini-stat small, .lock-hint, .link-quiet,
+.order-card-top strong, .product-meta, .review-who small, .type-card strong,
+.pay-card, .co-item b, .summary-row, .cart-item-info strong, .segmented button,
+.kanban-head strong, .coupon-meta, .top-item-info strong, .report-filters label {
+  font-family: var(--font-body);
+}
+
+/* fundo */
+.aurora { background: var(--cream); }
+.blob-a { background: radial-gradient(circle, rgba(214, 140, 138, .5) 0%, transparent 68%); opacity: .55; }
+.blob-b { background: radial-gradient(circle, rgba(226, 186, 143, .38) 0%, transparent 68%); opacity: .5; }
+.blob-c { background: radial-gradient(circle, rgba(184, 201, 165, .3) 0%, transparent 70%); opacity: .4; }
+.aurora .veil {
+  background-image: radial-gradient(rgba(109, 26, 44, .07) 1px, transparent 1px);
+  background-size: 30px 30px; opacity: .55;
+}
+
+/* faixa superior */
+.promo-strip { background: #5f1622; color: #fbeede; padding: 8px 0; }
+.promo-track { font-size: 10px; font-weight: 600; letter-spacing: .16em; }
+.promo-track b { background: rgba(255, 255, 255, .14); }
+.promo-track svg { width: 13px; height: 13px; }
+
+/* cabeçalho */
+.topbar { background: rgba(251, 246, 240, .9); border-bottom: 1px solid var(--line); }
+.brand-name { font-family: var(--font-display); font-size: 24px; font-weight: 600; letter-spacing: 0; }
+.brand-tag { font-size: 9px; font-weight: 700; letter-spacing: .26em; color: var(--pink-deep); }
+.logo-mark { filter: drop-shadow(0 6px 14px rgba(109, 26, 44, .22)); }
+.search-box { background: #fffdfa; }
+.btn-cart { background: var(--pink-deep); box-shadow: 0 12px 26px -14px rgba(109, 26, 44, .55); }
+.cat-btn { background: transparent; border-color: var(--line-strong); font-size: 12.5px; }
+.cat-btn svg { color: var(--pink); }
+.cat-btn.active { background: var(--pink-deep); border-color: var(--pink-deep); color: #fff9f2; box-shadow: 0 10px 22px -14px rgba(109, 26, 44, .6); }
+.cat-btn.active svg { color: #f3d9c9; }
+
+/* hero */
+.hero { padding: 64px 0 38px; gap: 54px; }
+.hero-copy .eyebrow { margin-bottom: 20px; }
+.hero-copy h1 { margin-bottom: 20px; }
+.hero-copy > p { font-size: 15.5px; line-height: 1.7; color: var(--muted); max-width: 480px; }
+.eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: .22em;
+  color: var(--pink-deep);
+}
+.hero-cta { margin: 30px 0 36px; }
+.btn { font-weight: 600; }
+.btn-primary { background: var(--pink-deep); box-shadow: 0 16px 34px -18px rgba(109, 26, 44, .6); }
+.btn-primary:hover { box-shadow: 0 20px 40px -18px rgba(109, 26, 44, .62); }
+.btn-ghost { background: transparent; border-color: var(--line-strong); }
+.btn-ghost:hover { border-color: var(--pink-deep); color: var(--pink-deep); }
+.btn-soft { background: #fffdfa; }
+.btn-lg { border-radius: 999px; padding: 15px 27px; font-size: 13.5px; }
+.hero-stats { gap: 0; padding-top: 4px; border-top: 0; }
+.hero-stats div { padding: 0 26px; border-left: 1px solid var(--line); }
+.hero-stats div:first-child { padding-left: 0; border-left: 0; }
+.hero-stats strong { font-family: var(--font-display); font-size: 27px; font-weight: 600; color: var(--pink-deep); }
+.hero-stats span { font-size: 9.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.hero-photo {
+  border-radius: 170px 170px 30px 30px;
+  border: 1px solid rgba(109, 26, 44, .1);
+  transform: none; aspect-ratio: 4 / 4.5;
+  box-shadow: var(--shadow-lg);
+}
+.hero-photo::after { background: linear-gradient(200deg, transparent 55%, rgba(60, 20, 20, .2)); }
+.hero-photo-glow { background: radial-gradient(ellipse at center, rgba(199, 154, 75, .35), transparent 65%); }
+.float-card { background: rgba(255, 253, 250, .93); border-color: rgba(255, 255, 255, .9); border-radius: 16px; }
+.float-card strong { font-family: var(--font-display); font-size: 16px; font-weight: 600; }
+.float-icon { background: linear-gradient(135deg, #f2ddb8, #d9b36a); color: #5c4114; }
+.float-icon.mint { background: linear-gradient(135deg, #dbe5cd, #8fae82); color: #2f4628; }
+.float-chip { background: var(--pink-deep); color: #fbeede; font-size: 10px; letter-spacing: .16em; }
+
+/* seções e cardápio */
+.menu-head { margin: 56px 0 24px; }
+.section-icon { background: var(--pink-soft); color: var(--pink-deep); border-radius: 50%; }
+.section-head { margin-bottom: 18px; }
+.section-head h3 { font-size: 24px; font-weight: 600; }
+.section-head small { font-size: 11px; color: var(--muted); }
+.product-grid { gap: 22px; }
+.product-card { background: #fffdfa; border-color: rgba(109, 26, 44, .11); border-radius: 20px; }
+.product-card:hover { border-color: rgba(109, 26, 44, .25); }
+.product-media { aspect-ratio: 4 / 4.6; }
+.product-tag {
+  background: rgba(255, 253, 250, .94); color: var(--pink-deep);
+  border: 1px solid rgba(109, 26, 44, .16);
+  font-size: 8.5px; letter-spacing: .12em;
+}
+.product-tag.hot { background: var(--pink-deep); color: #fff9f1; border-color: transparent; }
+.fav-btn { background: rgba(255, 253, 250, .9); }
+.product-body { padding: 16px 18px 18px; gap: 7px; }
+.product-body h4 { font-size: 18px; font-weight: 600; line-height: 1.25; }
+.product-desc { font-size: 12px; min-height: 36px; }
+.price-block .price { font-size: 19px; font-weight: 600; }
+.price-block .price.promo { color: var(--pink-deep); }
+.add-btn { width: 42px; height: 42px; border-radius: 50%; background: var(--pink-deep); box-shadow: none; }
+.add-btn:hover { transform: translateY(-2px); }
+.stars { color: #c79a4b; }
+.stars svg.off { color: #eadfd8; }
+
+/* avaliações */
+.reviews-section { margin-top: 66px; }
+.rating-summary strong { font-weight: 600; color: var(--pink-deep); }
+.review-grid { gap: 18px; }
+.review-card { background: #fffdfa; border-radius: 18px; padding: 22px; }
+.review-card .quote { font-family: var(--font-display); font-size: 16px; font-style: italic; line-height: 1.55; color: var(--ink-2); }
+.review-avatar { background: var(--pink-soft); color: var(--pink-deep); }
+
+/* informações e rodapé */
+.store-info { gap: 18px; }
+.info-card { background: rgba(255, 253, 250, .72); border-radius: 18px; }
+.info-icon { background: var(--pink-soft); color: var(--pink-deep); border-radius: 50%; }
+.info-card h3 { font-size: 17px; font-family: var(--font-display); font-weight: 600; }
+.shop-footer { background: #f4e9df; border-top: 1px solid rgba(109, 26, 44, .12); margin-top: 70px; }
+.footer-inner { padding: 32px 0; }
+.footer-brand strong { font-family: var(--font-display); font-size: 20px; font-weight: 600; }
+.footer-admin:hover { border-color: rgba(109, 26, 44, .4); color: var(--pink-deep); }
+.footer-meta { gap: 4px; }
+
+/* vitrines internas */
+.modal { border-radius: 22px; }
+.drawer { border-radius: 0; }
+.drawer-head h2 { font-family: var(--font-display); font-weight: 600; }
+.pm-price b { font-weight: 600; }
+.pm-top h2 { font-family: var(--font-display); font-weight: 600; }
+.summary-row.total b { font-family: var(--font-display); font-weight: 600; }
+.ok-hero { background: var(--pink-deep); }
+.track-step strong { font-family: var(--font-display); font-weight: 600; }
+.coupon-code { color: var(--pink-deep); }
+.cart-fab { background: var(--pink-deep); }
+.toast { background: #2c1b1c; }
+.toast svg { color: #d9c7a1; }
+
+/* painel */
+.view-admin { background: #f6f1ea; }
+.admin-topbar { background: rgba(251, 246, 240, .88); border-bottom-color: var(--line); }
+.admin-title h1 { font-family: var(--font-display); font-size: 27px; font-weight: 600; }
+.admin-nav button.active { background: var(--pink-deep); box-shadow: 0 12px 24px -16px rgba(0, 0, 0, .55); }
+.kpi-value, .panel-head h2, .settings-card h3 { font-weight: 600; }
+.kpi-card, .panel, .settings-card { border-radius: 16px; }
+.kpi-icon { border-radius: 50%; }
+.section-icon svg { width: 19px; height: 19px; }
+
+@media (max-width: 860px) {
+  .hero { padding-top: 36px; gap: 28px; }
+  .hero-photo { aspect-ratio: 4 / 4.2; }
+  .menu-head { margin-top: 42px; }
+}
+@media (max-width: 620px) {
+  .hero-copy h1 { font-size: 39px; line-height: 1.05; }
+  .hero-stats div { padding: 0 15px; }
+  .hero-stats strong { font-size: 21px; }
+  .hero-stats span { font-size: 8px; letter-spacing: .06em; }
+  .product-body { padding: 12px 13px 14px; }
+  .product-body h4 { font-size: 15px; }
+  .product-desc { font-size: 11px; min-height: 32px; }
+  .price-block .price { font-size: 16px; }
+  .add-btn { width: 36px; height: 36px; border-radius: 50%; }
+  .review-card .quote { font-size: 15px; }
+  .brand-name { font-size: 20px; }
+  .hero-photo { border-radius: 90px 90px 22px 22px; }
+}

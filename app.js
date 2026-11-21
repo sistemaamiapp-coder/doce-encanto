@@ -1,5 +1,5 @@
 /* ============================================================
-   Doce Encanto — loja + painel administrativo
+   Amor em Pedaços — loja + painel administrativo
    Dados persistidos em localStorage. Publicação estática (GitHub Pages).
    ============================================================ */
 'use strict';
@@ -59,11 +59,13 @@ const CLOUD_URL = 'https://uanrqgnsrfvcxdwtenjy.supabase.co';
 const CLOUD_KEY = 'sb_publishable_fG0B8csKs73RiZwcEQoOAg_zT_Jx2jE';
 
 const APP_IMAGES = [
+  'assets/img/hero-amor.jpg', 'assets/img/bolo-morango.jpg', 'assets/img/bolo-natal.jpg',
+  'assets/img/torta-nozes.jpg', 'assets/img/doces-finos.jpg', 'assets/img/torta-holandesa.jpg',
+  'assets/img/torta-limao.jpg', 'assets/img/cheesecake.jpg', 'assets/img/brigadeiro.jpg',
   'assets/img/hero-confeitaria.jpg', 'assets/img/bolo-chocolate.jpg', 'assets/img/bolo-redvelvet.jpg',
-  'assets/img/bolo-cenoura.jpg', 'assets/img/naked-cake.jpg', 'assets/img/torta-holandesa.jpg',
-  'assets/img/torta-limao.jpg', 'assets/img/cheesecake.jpg', 'assets/img/fatia-chocolate.jpg',
+  'assets/img/bolo-cenoura.jpg', 'assets/img/naked-cake.jpg', 'assets/img/fatia-chocolate.jpg',
   'assets/img/fatia-redvelvet.jpg', 'assets/img/empadao-frango.jpg', 'assets/img/empadao-palmito.jpg',
-  'assets/img/empadinha.jpg', 'assets/img/coxinha.jpg', 'assets/img/brigadeiro.jpg', 'assets/img/bebida.jpg'
+  'assets/img/empadinha.jpg', 'assets/img/coxinha.jpg', 'assets/img/bebida.jpg'
 ];
 
 const PAY_LABEL = { pix: 'Pix', card: 'Cartão na entrega', cash: 'Dinheiro' };
@@ -78,7 +80,7 @@ const WEEK = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sáb
 /* ------------------------------------------------------------
    2. Dados iniciais
    ------------------------------------------------------------ */
-const DEFAULT_HOURS = [null, ['09:00', '19:00'], ['09:00', '19:00'], ['09:00', '19:00'], ['09:00', '19:00'], ['09:00', '19:00'], ['09:00', '17:00']];
+const DEFAULT_HOURS = [null, ['09:00', '19:00'], ['09:00', '19:00'], ['09:00', '19:00'], ['09:00', '19:00'], ['09:00', '19:00'], ['09:00', '19:00']];
 
 function seedData() {
   const at = (d, h, m) => {
@@ -89,13 +91,11 @@ function seedData() {
   };
 
   const categories = [
+    { id: 'tortas', name: 'Tortas', icon: 'pie' },
     { id: 'bolos', name: 'Bolos', icon: 'cake' },
-    { id: 'tortas', name: 'Tortas', icon: 'cupcake' },
-    { id: 'fatias', name: 'Fatias', icon: 'slice' },
-    { id: 'empadoes', name: 'Empadões', icon: 'pie' },
-    { id: 'salgados', name: 'Salgados', icon: 'snack' },
-    { id: 'doces', name: 'Doces', icon: 'candy' },
-    { id: 'bebidas', name: 'Bebidas', icon: 'drink' }
+    { id: 'cheesecakes', name: 'Cheesecakes', icon: 'slice' },
+    { id: 'docesfinos', name: 'Doces finos', icon: 'candy' },
+    { id: 'natal', name: 'Especial de Natal', icon: 'spark' }
   ];
 
   const boloSizes = [
@@ -108,125 +108,74 @@ function seedData() {
     { name: 'Recheio extra de brigadeiro', price: 12 },
     { name: 'Morangos frescos', price: 15 }
   ];
+  const tortaSizes = [
+    { name: 'Inteira · serve 10', delta: 0 },
+    { name: 'Grande · serve 16', delta: 30 }
+  ];
 
   const products = [
     {
-      id: 'p-bolo-chocolate', cat: 'bolos', name: 'Bolo Trufado de Chocolate',
-      desc: 'Massa úmida de cacau 50%, recheio de brigadeiro cremoso e ganache de chocolate meio amargo.',
-      price: 89.9, promo: 79.9, img: 'assets/img/bolo-chocolate.jpg',
-      active: true, featured: true, badge: 'Mais pedido', sold: 312,
+      id: 'p-torta-chocolate', cat: 'tortas', name: 'Torta de Chocolate Belga',
+      desc: 'Ganache 70% cacau, biscuit de amêndoas e flor de sal.',
+      price: 89.9, promo: null, img: 'assets/img/torta-holandesa.jpg',
+      active: true, featured: true, badge: 'Mais pedida', sold: 148,
+      sizes: tortaSizes,
+      extras: [{ name: 'Calda extra de chocolate', price: 8 }, { name: 'Embalagem de presente', price: 6 }]
+    },
+    {
+      id: 'p-bolo-morango', cat: 'bolos', name: 'Bolo de Morango com Chantilly',
+      desc: 'Massa fofinha, morangos frescos e chantilly artesanal.',
+      price: 119, promo: null, img: 'assets/img/bolo-morango.jpg',
+      active: true, featured: true, badge: 'Destaque', sold: 96,
       sizes: boloSizes, extras: boloExtras
     },
     {
-      id: 'p-bolo-redvelvet', cat: 'bolos', name: 'Bolo Red Velvet',
-      desc: 'Camadas vermelho veludo com cream cheese frosting delicado e farofa de bolo artesanal.',
-      price: 99.9, promo: null, img: 'assets/img/bolo-redvelvet.jpg',
-      active: true, featured: true, badge: 'Premium', sold: 198,
-      sizes: boloSizes, extras: boloExtras
+      id: 'p-torta-limao', cat: 'tortas', name: 'Torta de Limão Merengada',
+      desc: 'Creme de limão siciliano com merengue maçaricado.',
+      price: 79.9, promo: null, img: 'assets/img/torta-limao.jpg',
+      active: true, featured: false, badge: 'Novidade', sold: 74,
+      sizes: tortaSizes,
+      extras: [{ name: 'Embalagem de presente', price: 6 }]
     },
     {
-      id: 'p-bolo-cenoura', cat: 'bolos', name: 'Bolo de Cenoura com Brigadeiro',
-      desc: 'O clássico que abraça: bolo fofinho de cenoura coberto com brigadeiro de colher.',
-      price: 69.9, promo: null, img: 'assets/img/bolo-cenoura.jpg',
-      active: true, featured: false, badge: '', sold: 254,
-      sizes: boloSizes, extras: boloExtras
+      id: 'p-cheesecake', cat: 'cheesecakes', name: 'Cheesecake de Frutas Vermelhas',
+      desc: 'Base crocante, creme aveludado e compota de frutas vermelhas.',
+      price: 95, promo: null, img: 'assets/img/cheesecake.jpg',
+      active: true, featured: true, badge: 'Novidade', sold: 112,
+      sizes: tortaSizes,
+      extras: [{ name: 'Calda extra de frutas vermelhas', price: 7 }]
     },
     {
-      id: 'p-naked-cake', cat: 'bolos', name: 'Naked Cake de Frutas Vermelhas',
-      desc: 'Três camadas de baunilha, chantilly leve e frutas vermelhas frescas. Elegante e leve.',
-      price: 119.9, promo: 109.9, img: 'assets/img/naked-cake.jpg',
-      active: true, featured: false, badge: 'Novo', sold: 87,
-      sizes: boloSizes, extras: [{ name: 'Flores comestíveis', price: 18 }, { name: 'Velas + pratinhos', price: 0 }]
+      id: 'p-bolo-natal', cat: 'natal', name: 'Bolo de Natal com Frutas Cristalizadas',
+      desc: 'Especiarias, frutas maceradas e glacê de laranja. Edição limitada.',
+      price: 139, promo: null, img: 'assets/img/bolo-natal.jpg',
+      active: true, featured: true, badge: 'Sazonal', sold: 43,
+      sizes: boloSizes,
+      extras: [{ name: 'Embalagem de presente', price: 0 }, { name: 'Cartão escrito à mão', price: 0 }]
     },
     {
-      id: 'p-torta-holandesa', cat: 'tortas', name: 'Torta Holandesa',
-      desc: 'Base crocante de biscoito, mousse de chocolate branco, ganache e calda de chocolate.',
-      price: 74.9, promo: 69.9, img: 'assets/img/torta-holandesa.jpg',
-      active: true, featured: true, badge: 'Mais pedido', sold: 233,
-      sizes: [{ name: 'Inteira · serve 10', delta: 0 }, { name: 'Grande · serve 16', delta: 28 }],
-      extras: [{ name: 'Bola de sorvete de creme', price: 7 }]
+      id: 'p-torta-nozes', cat: 'natal', name: 'Torta de Nozes com Doce de Leite',
+      desc: 'Nozes caramelizadas e doce de leite artesanal. Só no cardápio de Natal.',
+      price: 149, promo: null, img: 'assets/img/torta-nozes.jpg',
+      active: true, featured: false, badge: 'Novidade', sold: 38,
+      sizes: tortaSizes,
+      extras: [{ name: 'Embalagem de presente', price: 6 }]
     },
     {
-      id: 'p-torta-limao', cat: 'tortas', name: 'Torta de Limão Siciliano',
-      desc: 'Creme de limão siciliano, merengue maçaricado e massa sablée crocante. Azedinho perfeito.',
-      price: 69.9, promo: null, img: 'assets/img/torta-limao.jpg',
-      active: true, featured: false, badge: '', sold: 145,
-      sizes: [{ name: 'Inteira · serve 10', delta: 0 }, { name: 'Grande · serve 16', delta: 26 }],
-      extras: []
+      id: 'p-caixa-doces', cat: 'docesfinos', name: 'Caixa de Doces Finos',
+      desc: 'Seleção artesanal de brigadeiro belga, beijinho e casadinho de amêndoas.',
+      price: 72, promo: null, img: 'assets/img/doces-finos.jpg',
+      active: true, featured: false, badge: 'Para presentear', sold: 57,
+      sizes: [],
+      extras: [{ name: 'Cartão com mensagem', price: 0 }, { name: 'Laço de cetim', price: 5 }]
     },
     {
-      id: 'p-cheesecake', cat: 'tortas', name: 'Cheesecake de Frutas Vermelhas',
-      desc: 'Cheesecake cremoso de baunilha com compota artesanal de frutas vermelhas.',
-      price: 79.9, promo: null, img: 'assets/img/cheesecake.jpg',
-      active: true, featured: true, badge: 'Novo', sold: 176,
-      sizes: [{ name: 'Inteira · serve 10', delta: 0 }, { name: 'Grande · serve 16', delta: 30 }],
-      extras: []
-    },
-    {
-      id: 'p-fatia-chocolate', cat: 'fatias', name: 'Fatia Trufada de Chocolate',
-      desc: 'Fatia generosa do nosso bolo trufado, com ganache e raspas de chocolate.',
-      price: 14.9, promo: null, img: 'assets/img/fatia-chocolate.jpg',
-      active: true, featured: true, badge: 'Queridinho', sold: 423,
-      sizes: [], extras: [{ name: 'Calda de chocolate', price: 3 }, { name: 'Bola de sorvete', price: 6 }]
-    },
-    {
-      id: 'p-fatia-redvelvet', cat: 'fatias', name: 'Fatia Red Velvet',
-      desc: 'Fatia alta de red velvet com camadas generosas de cream cheese.',
-      price: 15.9, promo: null, img: 'assets/img/fatia-redvelvet.jpg',
-      active: true, featured: false, badge: '', sold: 287,
-      sizes: [], extras: [{ name: 'Bola de sorvete', price: 6 }]
-    },
-    {
-      id: 'p-fatia-holandesa', cat: 'fatias', name: 'Fatia de Torta Holandesa',
-      desc: 'A fatia mais cremosa da casa: biscoito, mousse branco e ganache.',
-      price: 16.9, promo: null, img: 'assets/img/torta-holandesa.jpg',
-      active: true, featured: false, badge: '', sold: 209,
-      sizes: [], extras: []
-    },
-    {
-      id: 'p-empadao-frango', cat: 'empadoes', name: 'Empadão de Frango Cremoso',
-      desc: 'Recheio de frango desfiado com catupiry, milho e ervas, massa podre dourada.',
-      price: 54.9, promo: 49.9, img: 'assets/img/empadao-frango.jpg',
-      active: true, featured: true, badge: 'Mais pedido', sold: 342,
-      sizes: [{ name: 'Pequeno · serve 4', delta: -15 }, { name: 'Médio · serve 8', delta: 0 }, { name: 'Grande · serve 12', delta: 25 }],
-      extras: [{ name: 'Molho de pimenta artesanal', price: 4 }]
-    },
-    {
-      id: 'p-empadao-palmito', cat: 'empadoes', name: 'Empadão de Palmito',
-      desc: 'Palmito picado, creme de ricota e temperos frescos em massa amanteigada.',
-      price: 49.9, promo: null, img: 'assets/img/empadao-palmito.jpg',
-      active: true, featured: false, badge: 'Vegetariano', sold: 167,
-      sizes: [{ name: 'Pequeno · serve 4', delta: -14 }, { name: 'Médio · serve 8', delta: 0 }, { name: 'Grande · serve 12', delta: 24 }],
-      extras: []
-    },
-    {
-      id: 'p-empadinha', cat: 'salgados', name: 'Empadinha de Frango',
-      desc: 'Empadinha pequena de massa podre com frango cremoso. Perfeita para lanches.',
-      price: 8.9, promo: null, img: 'assets/img/empadinha.jpg',
-      active: true, featured: false, badge: '', sold: 389,
-      sizes: [], extras: [{ name: 'Kit 6 unidades', price: 40 }, { name: 'Kit 12 unidades', price: 76 }]
-    },
-    {
-      id: 'p-coxinha', cat: 'salgados', name: 'Coxinha Cremosa',
-      desc: 'Coxinha artesanal com frango desfiado e catupiry, casquinha crocante.',
-      price: 7.9, promo: null, img: 'assets/img/coxinha.jpg',
-      active: true, featured: false, badge: '', sold: 512,
-      sizes: [], extras: [{ name: 'Porção com 6', price: 38 }]
-    },
-    {
-      id: 'p-brigadeiro', cat: 'doces', name: 'Brigadeiro Gourmet',
-      desc: 'Brigadeiro belga cremoso com granulado 50% cacau. Feito à mão, um por um.',
-      price: 5.9, promo: null, img: 'assets/img/brigadeiro.jpg',
-      active: true, featured: false, badge: '', sold: 674,
-      sizes: [], extras: [{ name: 'Caixa com 6', price: 28 }, { name: 'Caixa com 12', price: 52 }]
-    },
-    {
-      id: 'p-bebida', cat: 'bebidas', name: 'Limonada Rosa Artesanal',
-      desc: 'Limão, frutas vermelhas e hortelã. Refrescante e feito na hora.',
-      price: 9.9, promo: null, img: 'assets/img/bebida.jpg',
-      active: true, featured: false, badge: '', sold: 156,
-      sizes: [{ name: 'Copo 400ml', delta: 0 }, { name: 'Jarra 1L', delta: 8 }],
-      extras: []
+      id: 'p-brigadeiro', cat: 'docesfinos', name: 'Brigadeiro Belga',
+      desc: 'Ganache 70% cacau enrolada à mão e granulado belga.',
+      price: 6.5, promo: null, img: 'assets/img/brigadeiro.jpg',
+      active: true, featured: false, badge: '', sold: 186,
+      sizes: [],
+      extras: [{ name: 'Caixa com 6', price: 32 }, { name: 'Caixa com 12', price: 58 }]
     }
   ];
 
@@ -234,7 +183,7 @@ function seedData() {
 
   const mkOrder = (code, d, h, m, status, name, phone, type, payment, items, extra = {}) => {
     const subtotal = +(items.reduce((a, i) => a + i.price * i.qty, 0)).toFixed(2);
-    const deliveryFee = extra.deliveryFee !== undefined ? extra.deliveryFee : (type === 'delivery' ? (subtotal >= 120 ? 0 : 7.9) : 0);
+    const deliveryFee = extra.deliveryFee !== undefined ? extra.deliveryFee : (type === 'delivery' ? (subtotal >= 150 ? 0 : 12) : 0);
     const discount = extra.discount || 0;
     const total = +(subtotal + deliveryFee - discount).toFixed(2);
     return {
@@ -247,79 +196,75 @@ function seedData() {
   };
 
   const orders = [
-    mkOrder(1042, 0, 11, 42, 'preparo', 'Mariana Costa', '(21) 98812-4477', 'delivery', 'pix', [
-      item('p-fatia-chocolate', 'Fatia Trufada de Chocolate', 2, 14.9, 'Calda de chocolate'),
-      item('p-cheesecake', 'Cheesecake de Frutas Vermelhas', 1, 79.9, 'Inteira · serve 10')
-    ], { address: 'Rua das Acácias, 45 · apto 302 — Centro' }),
-    mkOrder(1041, 0, 10, 15, 'novo', 'Rafael Lima', '(21) 99120-3388', 'pickup', 'card', [
-      item('p-empadao-frango', 'Empadão de Frango Cremoso', 1, 49.9, 'Médio · serve 8'),
-      item('p-bebida', 'Limonada Rosa Artesanal', 2, 9.9, 'Copo 400ml')
+    mkOrder(1042, 0, 11, 42, 'preparo', 'Mariana Costa', '(11) 98812-4477', 'delivery', 'pix', [
+      item('p-torta-chocolate', 'Torta de Chocolate Belga', 1, 89.9, 'Inteira · serve 10'),
+      item('p-brigadeiro', 'Brigadeiro Belga', 2, 6.5, '')
+    ], { address: 'Rua Harmonia, 214 · apto 32 — Vila Madalena' }),
+    mkOrder(1041, 0, 10, 15, 'novo', 'Rafael Lima', '(11) 99120-3388', 'pickup', 'card', [
+      item('p-bolo-morango', 'Bolo de Morango com Chantilly', 1, 119, 'Médio · serve 12'),
+      item('p-brigadeiro', 'Brigadeiro Belga', 2, 6.5, '')
     ], { deliveryFee: 0 }),
-    mkOrder(1040, 1, 18, 20, 'concluido', 'Aline Souza', '(21) 99745-1020', 'delivery', 'pix', [
-      item('p-bolo-chocolate', 'Bolo Trufado de Chocolate', 1, 79.9, 'Médio · serve 12')
-    ], { deliveryFee: 0, address: 'Av. Central, 900 — bloco B', rated: true }),
-    mkOrder(1039, 2, 16, 5, 'concluido', 'Patrícia Nunes', '(21) 98444-7781', 'delivery', 'cash', [
-      item('p-naked-cake', 'Naked Cake de Frutas Vermelhas', 1, 109.9, 'Médio · serve 12')
-    ], { deliveryFee: 0, address: 'Rua das Palmeiras, 77', rated: true, changeFor: 120 }),
-    mkOrder(1038, 3, 12, 30, 'concluido', 'Camila Rocha', '(21) 98330-5591', 'pickup', 'pix', [
-      item('p-empadao-palmito', 'Empadão de Palmito', 1, 49.9, 'Médio · serve 8'),
-      item('p-empadinha', 'Empadinha de Frango', 3, 8.9, '')
+    mkOrder(1040, 1, 18, 20, 'concluido', 'Rafael Souza', '(11) 99745-1020', 'delivery', 'pix', [
+      item('p-torta-chocolate', 'Torta de Chocolate Belga', 1, 89.9, 'Inteira · serve 10')
+    ], { address: 'Rua Girassol, 88 — Vila Madalena', rated: true }),
+    mkOrder(1039, 2, 16, 5, 'concluido', 'Camila Prado', '(11) 98444-7781', 'delivery', 'card', [
+      item('p-bolo-morango', 'Bolo de Morango com Chantilly', 1, 119, 'Médio · serve 12')
+    ], { address: 'Rua Fradique Coutinho, 502 — Pinheiros', rated: true }),
+    mkOrder(1038, 3, 12, 30, 'concluido', 'Marina Alves', '(11) 98330-5591', 'pickup', 'pix', [
+      item('p-torta-limao', 'Torta de Limão Merengada', 1, 79.9, 'Inteira · serve 10')
     ], { deliveryFee: 0, rated: true }),
-    mkOrder(1037, 4, 19, 5, 'cancelado', 'Bruna Alves', '(21) 99012-6633', 'delivery', 'card', [
-      item('p-torta-limao', 'Torta de Limão Siciliano', 1, 69.9, 'Inteira · serve 10')
-    ], { address: 'Rua Sete de Setembro, 210' }),
-    mkOrder(1036, 5, 15, 40, 'concluido', 'Juliana Melo', '(21) 99227-9090', 'delivery', 'pix', [
-      item('p-fatia-redvelvet', 'Fatia Red Velvet', 4, 15.9, ''),
-      item('p-brigadeiro', 'Brigadeiro Gourmet', 6, 5.9, '')
-    ], { address: 'Rua das Flores, 12 — apto 101', rated: true }),
-    mkOrder(1035, 6, 10, 50, 'concluido', 'Renata Silva', '(21) 98821-3344', 'delivery', 'pix', [
-      item('p-bolo-redvelvet', 'Bolo Red Velvet', 1, 99.9, 'Médio · serve 12'),
-      item('p-brigadeiro', 'Brigadeiro Gourmet', 6, 5.9, 'Caixa com 6')
-    ], { deliveryFee: 0, address: 'Travessa do Sol, 31', rated: true })
+    mkOrder(1037, 4, 19, 5, 'cancelado', 'Bruna Alves', '(11) 99012-6633', 'delivery', 'card', [
+      item('p-cheesecake', 'Cheesecake de Frutas Vermelhas', 1, 95, 'Inteira · serve 10')
+    ], { address: 'Rua dos Pinheiros, 120 — Pinheiros' }),
+    mkOrder(1036, 5, 15, 40, 'concluido', 'Juliana Melo', '(11) 99227-9090', 'delivery', 'pix', [
+      item('p-torta-nozes', 'Torta de Nozes com Doce de Leite', 1, 149, 'Inteira · serve 10'),
+      item('p-brigadeiro', 'Brigadeiro Belga', 1, 6.5, '')
+    ], { address: 'Rua Purpurina, 45 — Vila Madalena', rated: true }),
+    mkOrder(1035, 6, 10, 50, 'concluido', 'Renata Silva', '(11) 98821-3344', 'delivery', 'pix', [
+      item('p-bolo-natal', 'Bolo de Natal com Frutas Cristalizadas', 1, 139, 'Médio · serve 12'),
+      item('p-caixa-doces', 'Caixa de Doces Finos', 1, 72, '')
+    ], { deliveryFee: 0, address: 'Rua Aspicuelta, 310 — Vila Madalena' })
   ];
 
   const reviews = [
-    { id: 'r1', orderId: 'o-1040', name: 'Aline Souza', rating: 5, text: 'O bolo trufado é surreal! Chegou perfeito, super úmido e o atendimento foi um carinho. Já virei cliente fiel.', date: at(1, 20, 10) },
-    { id: 'r2', orderId: 'o-1039', name: 'Patrícia Nunes', rating: 5, text: 'O naked cake roubou a cena na festa da minha filha. Todo mundo perguntou de onde era. Entrega antes do prazo!', date: at(2, 19, 0) },
-    { id: 'r3', orderId: 'o-1038', name: 'Camila Rocha', rating: 5, text: 'Empadão de palmito maravilhoso, massa amanteigada e recheio generoso. As empadinhas então... acabaram em minutos.', date: at(3, 14, 15) },
-    { id: 'r4', orderId: 'o-1036', name: 'Juliana Melo', rating: 5, text: 'As fatias são enormes e o red velvet é o melhor da região. O site é lindo e o pedido foi super rápido.', date: at(5, 16, 30) },
-    { id: 'r5', name: 'Renata Silva', rating: 5, text: 'Encomendei para um aniversário e foi um sucesso. Cuidado impecável com cada detalhe da embalagem.', date: at(7, 11, 20) },
-    { id: 'r6', name: 'Bianca Teixeira', rating: 5, text: 'O cheesecake com frutas vermelhas é uma experiência. Derrete na boca e o equilíbrio do doce é perfeito.', date: at(9, 17, 45) }
+    { id: 'r1', orderId: 'o-1040', name: 'Rafael Souza', rating: 5, text: 'A torta de chocolate belga é de outro mundo. Dá para sentir o cuidado em cada detalhe — chegou no dia, fresquinha e linda.', date: at(1, 20, 10) },
+    { id: 'r2', orderId: 'o-1039', name: 'Camila Prado', rating: 5, text: 'Pedi o bolo de morango para o aniversário da minha mãe e foi o maior sucesso. Chantilly leve, morangos fresquinhos e uma embalagem impecável.', date: at(2, 19, 0) },
+    { id: 'r3', orderId: 'o-1038', name: 'Marina Alves', rating: 4, text: 'A torta de limão merengada virou favorita da família. Equilíbrio perfeito entre o doce e o cítrico. Já encomendei de novo.', date: at(3, 14, 15) }
   ];
 
   return {
-    version: 1,
+    version: 2,
     meta: { seq: 1043, createdAt: new Date().toISOString() },
     settings: {
-      storeName: 'Doce Encanto',
+      storeName: 'Amor em Pedaços',
       tagline: 'confeitaria artesanal',
-      phone: '(21) 99999-0000',
-      whatsapp: '5521999990000',
-      instagram: '@doceencanto',
-      address: 'Rua das Flores, 120 — Centro, São Gonçalo/RJ',
-      deliveryFee: 7.9,
-      freeFrom: 120,
-      minOrder: 25,
-      etaMin: 40,
-      etaMax: 60,
+      phone: '(11) 99999-0000',
+      whatsapp: '5511999990000',
+      instagram: '@amorempedacos',
+      address: 'Rua das Flores, 128 — Vila Madalena, São Paulo/SP',
+      deliveryFee: 12,
+      freeFrom: 150,
+      minOrder: 40,
+      etaMin: 60,
+      etaMax: 120,
       openMode: 'open',
       hours: DEFAULT_HOURS.map((h) => (h ? [...h] : null)),
       payment: { pix: true, card: true, cash: true },
-      pixKey: 'pedidos@doceencanto.com.br',
+      pixKey: 'pedidos@amorempedacos.com.br',
       adminPin: '1234',
       hero: {
-        badge: 'direto do nosso ateliê',
-        title: 'Doçura que abraça, tecnologia que entrega.',
-        subtitle: 'Bolos, tortas, fatias, empadões e salgados artesanais. Monte seu pedido em segundos e receba fresquinho na sua porta.',
-        image: 'assets/img/hero-confeitaria.jpg'
+        badge: 'feito no dia',
+        title: 'Cada fatia, um pedaço de amor.',
+        subtitle: 'Começamos na cozinha de casa, com as receitas da vó Cida. Hoje assamos em pequenas fornadas todos os dias, com ingredientes frescos e sem conservantes.',
+        image: 'assets/img/hero-amor.jpg'
       }
     },
     categories,
     products,
     coupons: [
-      { id: 'c1', code: 'BEMVINDA10', type: 'percent', value: 10, minOrder: 40, active: true, uses: 42, limit: 0, expires: '2027-12-31' },
-      { id: 'c2', code: 'FRETEGRATIS', type: 'shipping', value: 0, minOrder: 80, active: true, uses: 18, limit: 0, expires: '2027-12-31' },
-      { id: 'c3', code: 'DOCE15', type: 'fixed', value: 15, minOrder: 100, active: false, uses: 3, limit: 50, expires: '2027-06-30' }
+      { id: 'c1', code: 'BEMVINDA10', type: 'percent', value: 10, minOrder: 40, active: true, uses: 38, limit: 0, expires: '2027-12-31' },
+      { id: 'c2', code: 'FRETEGRATIS', type: 'shipping', value: 0, minOrder: 150, active: true, uses: 21, limit: 0, expires: '2027-12-31' },
+      { id: 'c3', code: 'NATAL15', type: 'fixed', value: 15, minOrder: 120, active: true, uses: 9, limit: 50, expires: '2026-12-24' }
     ],
     orders,
     reviews
@@ -359,7 +304,7 @@ function loadJSON(key, fallback) {
 
 function loadData() {
   const stored = loadJSON(DB_KEY, null);
-  if (stored && stored.version === 1 && Array.isArray(stored.products) && stored.settings) return stored;
+  if (stored && stored.version === 2 && Array.isArray(stored.products) && stored.settings) return stored;
   const fresh = seedData();
   try { localStorage.setItem(DB_KEY, JSON.stringify(fresh)); } catch (e) { /* ignore */ }
   return fresh;
@@ -670,7 +615,7 @@ function waLink(message) {
 
 function applySettings() {
   const s = data.settings;
-  document.title = `${s.storeName} · Bolos, tortas e empadões`;
+  document.title = `${s.storeName} · Confeitaria artesanal`;
   $('#brandName').textContent = s.storeName;
   $('#brandTag').textContent = s.tagline;
   $('#footerName').textContent = s.storeName;
@@ -764,7 +709,7 @@ function renderMenu() {
           <small>${matched.length} ${matched.length === 1 ? 'item' : 'itens'}</small>
           <span class="section-line"></span>
         </div>
-        ${matched.length ? `<div class="product-grid">${matched.map(productCard).join('')}</div>` : emptyState('search', 'Nenhum item encontrado', 'Tente buscar por bolo, torta, empadão ou salgado.')}
+        ${matched.length ? `<div class="product-grid">${matched.map(productCard).join('')}</div>` : emptyState('search', 'Nenhum item encontrado', 'Tente buscar por torta, bolo, cheesecake ou doce.')}
       </section>`;
   } else {
     const sections = data.categories
@@ -2034,7 +1979,7 @@ function adminCategoriesHTML() {
 
 function openCategoryForm(id) {
   const c = id ? data.categories.find((x) => x.id === id) : null;
-  const iconsList = [['cake', 'Bolo'], ['pie', 'Torta/Empadão'], ['slice', 'Fatia'], ['cupcake', 'Cupcake'], ['snack', 'Salgado'], ['candy', 'Doce'], ['drink', 'Bebida'], ['heart', 'Coração']];
+  const iconsList = [['cake', 'Bolo'], ['pie', 'Torta'], ['slice', 'Fatia'], ['cupcake', 'Cupcake'], ['candy', 'Doce'], ['spark', 'Especial'], ['snack', 'Salgado'], ['drink', 'Bebida'], ['heart', 'Coração']];
   openModal(`
     <button class="modal-close" type="button" data-act="close-modal" aria-label="Fechar">${icon('x')}</button>
     <div class="modal-head">

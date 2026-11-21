@@ -3,11 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Doce Encanto · Bolos, tortas e empadões</title>
-<meta name="description" content="Confeitaria artesanal: bolos, tortas, fatias, empadões e salgados feitos no dia. Peça online com entrega.">
-<meta name="theme-color" content="#ff2e88">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ff2e88'/%3E%3Cstop offset='.55' stop-color='%23c026d3'/%3E%3Cstop offset='1' stop-color='%237c3aed'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='url(%23g)'/%3E%3Cpath d='M20 42h24M22 42v-6a10 10 0 0 1 20 0v6' fill='none' stroke='%23fff' stroke-width='3.4' stroke-linecap='round'/%3E%3Cpath d='M32 20v6' stroke='%23fff' stroke-width='3.4' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='17' r='2.6' fill='%23ffe08a'/%3E%3C/svg%3E">
+<title>Amor em Pedaços · Confeitaria artesanal</title>
+<meta name="description" content="Tortas, bolos, cheesecakes e doces finos feitos no dia, com as receitas da vó Cida. Peça online e receba em casa.">
+<meta name="theme-color" content="#5f1622">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%235f1622'/%3E%3Cpath d='M32 48S17 38.8 17 28.5C17 23 21.2 19.4 26.4 19.4c2.3 0 4.2.9 5.6 2.6 1.4-1.7 3.3-2.6 5.6-2.6C42.8 19.4 47 23 47 28.5 47 38.8 32 48 32 48Z' fill='%23fbf1e6'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 <div class="aurora" aria-hidden="true">
@@ -18,6 +19,12 @@
 </div>
 
 <svg class="svg-sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a93147"/>
+      <stop offset="1" stop-color="#5f1622"/>
+    </linearGradient>
+  </defs>
   <symbol id="i-cake" viewBox="0 0 24 24"><path d="M4 20h16M5 20v-6.5c0-1.4 1.1-2.5 2.5-2.5h9c1.4 0 2.5 1.1 2.5 2.5V20M5 17c1.2 1.2 2.4 1.2 3.5 0s2.3-1.2 3.5 0 2.3 1.2 3.5 0 2.3-1.2 3.5 0M12 7V4.5M12 4.5c.9 0 1.5-.6 1.5-1.5 0 .9.6 1.5 1.5 1.5-.9 0-1.5.6-1.5 1.5 0-.9-.6-1.5-1.5-1.5Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-pie" viewBox="0 0 24 24"><path d="M3 11h18M4.5 11a7.5 7.5 0 0 1 15 0M12 11V4M6 20h12M8 11l-1.5 9M16 11l1.5 9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></symbol>
   <symbol id="i-slice" viewBox="0 0 24 24"><path d="M3 20 20 3a10 10 0 0 1-3 12c-2.4 2.4-6 4-9 4l-5 1ZM8 15l4-4M7 20l1.5-4.5M13 10.5 17 10M10.5 13 10 17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -66,12 +73,12 @@
     <div class="promo-strip" id="promoStrip">
       <div class="promo-track">
         <span><svg><use href="#i-spark"/></svg> Feito no dia, com ingredientes selecionados</span>
-        <span><svg><use href="#i-bike"/></svg> Entrega em até 60 min</span>
-        <span><svg><use href="#i-heart"/></svg> Mais de 2.400 pedidos com amor</span>
+        <span><svg><use href="#i-bike"/></svg> Entrega em até 24h</span>
+        <span><svg><use href="#i-heart"/></svg> Receitas da vó Cida desde sempre</span>
         <span><svg><use href="#i-tag"/></svg> Cupom <b>BEMVINDA10</b> na primeira compra</span>
         <span><svg><use href="#i-spark"/></svg> Feito no dia, com ingredientes selecionados</span>
-        <span><svg><use href="#i-bike"/></svg> Entrega em até 60 min</span>
-        <span><svg><use href="#i-heart"/></svg> Mais de 2.400 pedidos com amor</span>
+        <span><svg><use href="#i-bike"/></svg> Entrega em até 24h</span>
+        <span><svg><use href="#i-heart"/></svg> Receitas da vó Cida desde sempre</span>
         <span><svg><use href="#i-tag"/></svg> Cupom <b>BEMVINDA10</b> na primeira compra</span>
       </div>
     </div>
@@ -81,22 +88,14 @@
         <a class="brand" href="#/" aria-label="Ir para o início">
           <span class="logo-mark">
             <svg viewBox="0 0 64 64" aria-hidden="true">
-              <defs>
-                <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0" stop-color="#ff4d97"/>
-                  <stop offset=".5" stop-color="#c026d3"/>
-                  <stop offset="1" stop-color="#7c3aed"/>
-                </linearGradient>
-              </defs>
               <rect width="64" height="64" rx="19" fill="url(#logoGrad)"/>
-              <path d="M19 43h26M22 43v-7a10 10 0 0 1 20 0v7" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
-              <path d="M22 37.5c1.8 1.7 3.4 1.7 5.2 0s3.4-1.7 5.2 0 3.4 1.7 5.2 0 3.4-1.7 4.4-.8" fill="none" stroke="#ffd7ea" stroke-width="2.2" stroke-linecap="round"/>
-              <path d="M32 20v6" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/>
-              <circle cx="32" cy="16.5" r="2.8" fill="#ffe08a"/>
+              <path d="M32 47.5s-14.5-8.9-14.5-19c0-5.5 4.2-9.1 9.4-9.1 2.2 0 4.1.9 5.1 2.5 1-1.6 2.9-2.5 5.1-2.5 5.2 0 9.4 3.6 9.4 9.1 0 10.1-14.5 19-14.5 19Z" fill="#fbf1e6"/>
+              <path d="M32 40.5c-2.6-2.4-5.6-4.5-5.6-7.3 0-1.7 1.2-3 2.8-3 1.1 0 2.1.6 2.8 1.6.7-1 1.7-1.6 2.8-1.6 1.6 0 2.8 1.3 2.8 3 0 2.8-3 4.9-5.6 7.3Z" fill="#a93147"/>
+              <circle cx="46" cy="18" r="2.4" fill="#d9b36a"/>
             </svg>
           </span>
           <span class="brand-copy">
-            <strong class="brand-name" id="brandName">Doce Encanto</strong>
+            <strong class="brand-name" id="brandName">Amor em Pedaços</strong>
             <small class="brand-tag" id="brandTag">confeitaria artesanal</small>
           </span>
         </a>
@@ -105,7 +104,7 @@
           <button class="status-pill" id="storeStatus" type="button" title="Horário de funcionamento"></button>
           <label class="search-box" for="searchInput">
             <svg><use href="#i-search"/></svg>
-            <input id="searchInput" type="search" placeholder="Buscar bolo, torta, empadão..." autocomplete="off">
+            <input id="searchInput" type="search" placeholder="Buscar torta, bolo, doce..." autocomplete="off">
             <kbd>/</kbd>
           </label>
           <button class="btn btn-soft btn-orders" id="btnMeusPedidos" type="button">
@@ -127,9 +126,9 @@
     <main class="shop-main">
       <section class="hero" id="heroSection">
         <div class="hero-copy">
-          <span class="eyebrow"><svg><use href="#i-spark"/></svg> <span id="heroBadge">direto do nosso ateliê</span></span>
-          <h1 id="heroTitle">Doçura que abraça,<br><em>tecnologia que entrega.</em></h1>
-          <p id="heroSubtitle">Bolos, tortas, fatias, empadões e salgados artesanais. Monte seu pedido em segundos e receba fresquinho na sua porta.</p>
+          <span class="eyebrow"><svg><use href="#i-spark"/></svg> <span id="heroBadge">feito no dia</span></span>
+          <h1 id="heroTitle">Cada fatia,<br><em>um pedaço de amor.</em></h1>
+          <p id="heroSubtitle">Começamos na cozinha de casa, com as receitas da vó Cida. Hoje assamos em pequenas fornadas todos os dias, com ingredientes frescos e sem conservantes.</p>
           <div class="hero-cta">
             <button class="btn btn-primary btn-lg" type="button" data-act="scroll-menu">
               Ver cardápio <svg><use href="#i-arrow"/></svg>
@@ -139,23 +138,23 @@
             </a>
           </div>
           <div class="hero-stats">
-            <div><strong id="statRating">4.9</strong><span>avaliação média</span></div>
-            <div><strong id="statOrders">2,4 mil</strong><span>pedidos entregues</span></div>
-            <div><strong id="statEta">40–60</strong><span>minutos em média</span></div>
+            <div><strong id="statRating">4,7</strong><span>3 avaliações</span></div>
+            <div><strong id="statOrders">100%</strong><span>artesanal</span></div>
+            <div><strong id="statEta">60–120</strong><span>minutos de entrega</span></div>
           </div>
         </div>
         <div class="hero-visual">
           <div class="hero-photo">
-            <img id="heroImage" src="assets/img/hero-confeitaria.jpg" alt="Mesa com bolos, tortas e empadões artesanais">
+            <img id="heroImage" src="assets/img/hero-amor.jpg" alt="Fatia de bolo com morangos frescos sobre mesa de mármore">
             <span class="hero-photo-glow" aria-hidden="true"></span>
           </div>
           <div class="float-card float-rating">
             <span class="float-icon"><svg><use href="#i-star"/></svg></span>
-            <div><strong>4.9 / 5</strong><small>+ 480 avaliações</small></div>
+            <div><strong>4,7 / 5</strong><small>3 avaliações</small></div>
           </div>
           <div class="float-card float-delivery">
             <span class="float-icon mint"><svg><use href="#i-bike"/></svg></span>
-            <div><strong id="floatEta">40–60 min</strong><small>entrega no mesmo dia</small></div>
+            <div><strong id="floatEta">60–120 min</strong><small>entrega no mesmo dia</small></div>
           </div>
           <div class="float-chip"><svg><use href="#i-heart"/></svg> feito à mão</div>
         </div>
@@ -164,7 +163,7 @@
       <section class="menu-head">
         <div>
           <span class="eyebrow"><svg><use href="#i-grid"/></svg> cardápio completo</span>
-          <h2>Escolha seu <em>momento doce</em></h2>
+          <h2>Escolha o seu <em>pedaço</em></h2>
         </div>
         <div class="menu-head-side">
           <span class="chip" id="menuCount">0 itens</span>
@@ -177,13 +176,13 @@
       <section class="reviews-section" id="reviewsSection">
         <div class="menu-head">
           <div>
-            <span class="eyebrow"><svg><use href="#i-heart2"/></svg> quem prova, volta</span>
-            <h2>Amor em forma de <em>elogio</em></h2>
+            <span class="eyebrow"><svg><use href="#i-heart2"/></svg> mural de carinho</span>
+            <h2>Quem prova, <em>volta</em></h2>
           </div>
           <div class="rating-summary">
-            <strong id="ratingAvg">4.9</strong>
+            <strong id="ratingAvg">4,7</strong>
             <span class="stars" id="ratingStars"></span>
-            <small id="ratingCount">480 avaliações</small>
+            <small id="ratingCount">3 avaliações</small>
           </div>
         </div>
         <div class="review-grid" id="reviewGrid"></div>
@@ -192,24 +191,24 @@
       <section class="store-info">
         <div class="info-card">
           <span class="info-icon"><svg><use href="#i-bike"/></svg></span>
-          <h3>Entrega rápida</h3>
-          <p>Enviamos em até <b id="infoEta">60 min</b> para toda a região central. Frete <b id="infoFee">R$ 7,90</b>.</p>
+          <h3>Entrega cuidadosa</h3>
+          <p>Enviamos em até <b id="infoEta">120 min</b> na região. Frete <b id="infoFee">R$ 12,00</b>, grátis acima de R$ 150.</p>
         </div>
         <div class="info-card">
           <span class="info-icon"><svg><use href="#i-pix"/></svg></span>
-          <h3>Pague como quiser</h3>
-          <p>Pix, cartão na entrega ou dinheiro. Seu pedido confirmado na hora.</p>
+          <h3>Pagamento fácil</h3>
+          <p>Pix, crédito ou débito na entrega. Pedido mínimo de R$ 40,00.</p>
         </div>
         <div class="info-card">
           <span class="info-icon"><svg><use href="#i-spark"/></svg></span>
-          <h3>Feito no dia</h3>
-          <p>Produção artesanal diária, sem conservantes. Do nosso ateliê para a sua mesa.</p>
+          <h3>Assado no dia</h3>
+          <p>Pequenas fornadas diárias, sem conservantes. Do nosso ateliê para a sua mesa.</p>
         </div>
         <div class="info-card contact-card">
           <span class="info-icon"><svg><use href="#i-whatsapp"/></svg></span>
           <h3>Fale com a gente</h3>
-          <p id="infoPhone">(21) 99999-0000</p>
-          <a class="link-arrow" id="infoInstagram" target="_blank" rel="noopener">@doceencanto <svg><use href="#i-arrow"/></svg></a>
+          <p id="infoPhone">(11) 99999-0000</p>
+          <a class="link-arrow" id="infoInstagram" target="_blank" rel="noopener">@amorempedacos <svg><use href="#i-arrow"/></svg></a>
         </div>
       </section>
     </main>
@@ -218,16 +217,16 @@
       <div class="footer-inner">
         <div class="footer-brand">
           <span class="logo-mark small">
-            <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="19" fill="url(#logoGrad)"/><path d="M19 43h26M22 43v-7a10 10 0 0 1 20 0v7" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/><path d="M32 20v6" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/><circle cx="32" cy="16.5" r="2.8" fill="#ffe08a"/></svg>
+            <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="19" fill="url(#logoGrad)"/><path d="M32 47.5s-14.5-8.9-14.5-19c0-5.5 4.2-9.1 9.4-9.1 2.2 0 4.1.9 5.1 2.5 1-1.6 2.9-2.5 5.1-2.5 5.2 0 9.4 3.6 9.4 9.1 0 10.1-14.5 19-14.5 19Z" fill="#fbf1e6"/><path d="M32 40.5c-2.6-2.4-5.6-4.5-5.6-7.3 0-1.7 1.2-3 2.8-3 1.1 0 2.1.6 2.8 1.6.7-1 1.7-1.6 2.8-1.6 1.6 0 2.8 1.3 2.8 3 0 2.8-3 4.9-5.6 7.3Z" fill="#a93147"/><circle cx="46" cy="18" r="2.4" fill="#d9b36a"/></svg>
           </span>
           <div>
-            <strong id="footerName">Doce Encanto</strong>
-            <p id="footerAddress">Rua das Flores, 120 — Centro</p>
+            <strong id="footerName">Amor em Pedaços</strong>
+            <p id="footerAddress">Rua das Flores, 128 — Vila Madalena, São Paulo</p>
           </div>
         </div>
         <div class="footer-meta">
-          <p>Segunda a sábado · 09h às 19h</p>
-          <p class="mono">pedidos@doceencanto · <span id="footerYear"></span></p>
+          <p>Seg a sáb · 9h às 19h · entrega em até 24h</p>
+          <p class="mono">© <span id="footerYear"></span> · feito com carinho em cada fatia</p>
         </div>
         <button class="footer-admin" id="btnAdminFooter" type="button">
           <svg><use href="#i-lock"/></svg> Área do administrador
@@ -242,10 +241,10 @@
       <aside class="admin-side">
         <div class="admin-brand">
           <span class="logo-mark small">
-            <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="19" fill="url(#logoGrad)"/><path d="M19 43h26M22 43v-7a10 10 0 0 1 20 0v7" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/><path d="M32 20v6" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/><circle cx="32" cy="16.5" r="2.8" fill="#ffe08a"/></svg>
+            <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="19" fill="url(#logoGrad)"/><path d="M32 47.5s-14.5-8.9-14.5-19c0-5.5 4.2-9.1 9.4-9.1 2.2 0 4.1.9 5.1 2.5 1-1.6 2.9-2.5 5.1-2.5 5.2 0 9.4 3.6 9.4 9.1 0 10.1-14.5 19-14.5 19Z" fill="#fbf1e6"/><path d="M32 40.5c-2.6-2.4-5.6-4.5-5.6-7.3 0-1.7 1.2-3 2.8-3 1.1 0 2.1.6 2.8 1.6.7-1 1.7-1.6 2.8-1.6 1.6 0 2.8 1.3 2.8 3 0 2.8-3 4.9-5.6 7.3Z" fill="#a93147"/><circle cx="46" cy="18" r="2.4" fill="#d9b36a"/></svg>
           </span>
           <div>
-            <strong id="adminBrandName">Doce Encanto</strong>
+            <strong id="adminBrandName">Amor em Pedaços</strong>
             <small>painel do administrador</small>
           </div>
         </div>
@@ -286,10 +285,10 @@
 
     <div class="admin-lock" id="adminLock" hidden>
       <div class="lock-card">
-        <span class="logo-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="19" fill="url(#logoGrad)"/><path d="M19 43h26M22 43v-7a10 10 0 0 1 20 0v7" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/><path d="M32 20v6" stroke="#fff" stroke-width="3.4" stroke-linecap="round"/><circle cx="32" cy="16.5" r="2.8" fill="#ffe08a"/></svg></span>
+        <span class="logo-mark"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="19" fill="url(#logoGrad)"/><path d="M32 47.5s-14.5-8.9-14.5-19c0-5.5 4.2-9.1 9.4-9.1 2.2 0 4.1.9 5.1 2.5 1-1.6 2.9-2.5 5.1-2.5 5.2 0 9.4 3.6 9.4 9.1 0 10.1-14.5 19-14.5 19Z" fill="#fbf1e6"/><path d="M32 40.5c-2.6-2.4-5.6-4.5-5.6-7.3 0-1.7 1.2-3 2.8-3 1.1 0 2.1.6 2.8 1.6.7-1 1.7-1.6 2.8-1.6 1.6 0 2.8 1.3 2.8 3 0 2.8-3 4.9-5.6 7.3Z" fill="#a93147"/><circle cx="46" cy="18" r="2.4" fill="#d9b36a"/></svg></span>
         <span class="eyebrow"><svg><use href="#i-lock"/></svg> acesso restrito</span>
         <h2>Painel <em>administrativo</em></h2>
-        <p>Digite o PIN de administrador para gerenciar a loja.</p>
+        <p>Digite o PIN de administrador para gerenciar a confeitaria.</p>
         <form id="lockForm" autocomplete="off">
           <label class="pin-field">
             <svg><use href="#i-lock"/></svg>

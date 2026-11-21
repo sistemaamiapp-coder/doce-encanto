@@ -1,6 +1,8 @@
-# Doce Encanto · Confeitaria Artesanal
+# Amor em Pedaços · Confeitaria Artesanal
 
-Loja online completa para confeitaria: cardápio com fotos, carrinho, checkout com entrega/retirada, cupons de desconto, acompanhamento de pedidos e painel administrativo com gestão total da loja.
+Loja online da confeitaria Amor em Pedaços: tortas, bolos, cheesecakes, doces finos e o especial de Natal. Cardápio com fotos, carrinho, checkout com entrega/retirada, cupons de desconto, acompanhamento de pedidos e painel administrativo com gestão total da loja.
+
+Site publicado: <https://sistemaamiapp-coder.github.io/doce-encanto/>
 
 ## Acesso ao painel
 
