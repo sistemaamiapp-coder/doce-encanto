@@ -154,7 +154,7 @@
           </div>
           <div class="float-card float-delivery">
             <span class="float-icon mint"><svg><use href="#i-bike"/></svg></span>
-            <div><strong id="floatEta">60–120 min</strong><small>entrega no mesmo dia</small></div>
+            <div><strong id="floatEta">60–120 min</strong><small id="floatEtaLabel">entrega no mesmo dia</small></div>
           </div>
           <div class="float-chip"><svg><use href="#i-heart"/></svg> feito à mão</div>
         </div>
@@ -192,12 +192,12 @@
         <div class="info-card">
           <span class="info-icon"><svg><use href="#i-bike"/></svg></span>
           <h3>Entrega cuidadosa</h3>
-          <p>Enviamos em até <b id="infoEta">120 min</b> na região. Frete <b id="infoFee">R$ 12,00</b>, grátis acima de R$ 150.</p>
+          <p id="infoDelivery">Enviamos em até <b>120 min</b> na região. Frete <b>R$ 12,00</b>, grátis acima de R$ 150.</p>
         </div>
         <div class="info-card">
           <span class="info-icon"><svg><use href="#i-pix"/></svg></span>
           <h3>Pagamento fácil</h3>
-          <p>Pix, crédito ou débito na entrega. Pedido mínimo de R$ 40,00.</p>
+          <p>Pix, crédito ou débito na entrega. Pedido mínimo de <span id="infoMin">R$ 40,00</span>.</p>
         </div>
         <div class="info-card">
           <span class="info-icon"><svg><use href="#i-spark"/></svg></span>
@@ -297,7 +297,6 @@
           <p class="lock-error" id="lockError" role="alert"></p>
           <button class="btn btn-primary btn-block" type="submit">Entrar no painel <svg><use href="#i-arrow"/></svg></button>
         </form>
-        <p class="lock-hint">PIN inicial: <b>1234</b> — altere em Configurações › Segurança.</p>
         <button class="link-quiet" id="btnLockBack" type="button">Voltar para a loja</button>
       </div>
     </div>

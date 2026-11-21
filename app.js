@@ -53,6 +53,7 @@ const MY_KEY = 'doceEncanto.myorders.v1';
 const CUST_KEY = 'doceEncanto.customer.v1';
 const SESSION_KEY = 'doceEncanto.session.v1';
 const PIN_KEY = 'doceEncanto.pin.v1';
+const GEO_KEY = 'doceEncanto.geo.v1';
 
 /* Banco online (Supabase). A chave publicável é pública por design. */
 const CLOUD_URL = 'https://uanrqgnsrfvcxdwtenjy.supabase.co';
@@ -67,6 +68,7 @@ const APP_IMAGES = [
   'assets/img/fatia-redvelvet.jpg', 'assets/img/empadao-frango.jpg', 'assets/img/empadao-palmito.jpg',
   'assets/img/empadinha.jpg', 'assets/img/coxinha.jpg', 'assets/img/bebida.jpg'
 ];
+const DEFAULT_GALLERY = APP_IMAGES.slice(0, 12);
 
 const PAY_LABEL = { pix: 'Pix', card: 'Cartão na entrega', cash: 'Dinheiro' };
 const TYPE_LABEL = { delivery: 'Entrega', pickup: 'Retirada' };
@@ -245,6 +247,11 @@ function seedData() {
       deliveryFee: 12,
       freeFrom: 150,
       minOrder: 40,
+      deliveryEnabled: true,
+      deliveryRadiusKm: 8,
+      storeLat: null,
+      storeLng: null,
+      geoAddress: '',
       etaMin: 60,
       etaMax: 120,
       openMode: 'open',
@@ -256,7 +263,8 @@ function seedData() {
         badge: 'feito no dia',
         title: 'Cada fatia, um pedaço de amor.',
         subtitle: 'Começamos na cozinha de casa, com as receitas da vó Cida. Hoje assamos em pequenas fornadas todos os dias, com ingredientes frescos e sem conservantes.',
-        image: 'assets/img/hero-amor.jpg'
+        image: 'assets/img/hero-amor.jpg',
+        gallery: DEFAULT_GALLERY.slice()
       }
     },
     categories,
@@ -302,10 +310,30 @@ function loadJSON(key, fallback) {
   } catch (e) { return fallback; }
 }
 
+function normalizeSettings(s) {
+  if (!s || typeof s !== 'object') return s;
+  s.hero = s.hero || {};
+  if (!Array.isArray(s.hero.gallery) || !s.hero.gallery.length) s.hero.gallery = DEFAULT_GALLERY.slice();
+  s.hero.gallery = s.hero.gallery.filter((src) => typeof src === 'string' && src);
+  if (!s.hero.gallery.length) s.hero.gallery = DEFAULT_GALLERY.slice();
+  if (s.hero.image && !s.hero.gallery.includes(s.hero.image)) s.hero.gallery.unshift(s.hero.image);
+  if (typeof s.deliveryEnabled !== 'boolean') s.deliveryEnabled = true;
+  const radius = Number(s.deliveryRadiusKm);
+  s.deliveryRadiusKm = Number.isFinite(radius) && radius >= 0 ? radius : 8;
+  s.storeLat = s.storeLat == null || !Number.isFinite(Number(s.storeLat)) ? null : Number(s.storeLat);
+  s.storeLng = s.storeLng == null || !Number.isFinite(Number(s.storeLng)) ? null : Number(s.storeLng);
+  if (typeof s.geoAddress !== 'string') s.geoAddress = '';
+  return s;
+}
+
 function loadData() {
   const stored = loadJSON(DB_KEY, null);
-  if (stored && stored.version === 2 && Array.isArray(stored.products) && stored.settings) return stored;
+  if (stored && stored.version === 2 && Array.isArray(stored.products) && stored.settings) {
+    normalizeSettings(stored.settings);
+    return stored;
+  }
   const fresh = seedData();
+  normalizeSettings(fresh.settings);
   try { localStorage.setItem(DB_KEY, JSON.stringify(fresh)); } catch (e) { /* ignore */ }
   return fresh;
 }
@@ -356,7 +384,7 @@ async function cloudBootstrap() {
     const hasCatalog = Array.isArray(cat.products) && cat.products.length > 0;
     state.cloudCatalogEmpty = !hasCatalog;
     if (hasCatalog) {
-      data.settings = { ...data.settings, ...cat.settings, adminPin: data.settings.adminPin };
+      data.settings = normalizeSettings({ ...data.settings, ...cat.settings, adminPin: data.settings.adminPin });
       data.categories = Array.isArray(cat.categories) ? cat.categories : data.categories;
       data.products = cat.products;
       data.coupons = Array.isArray(cat.coupons) ? cat.coupons : data.coupons;
@@ -531,7 +559,7 @@ function cartSummary(type = 'delivery') {
   const coupon = state.couponCode ? findCoupon(state.couponCode) : null;
   const problem = state.couponCode ? couponProblem(coupon, subtotal) : '';
   const validCoupon = problem ? null : coupon;
-  let delivery = type === 'pickup' ? 0 : (subtotal >= (s.freeFrom || 0) ? 0 : s.deliveryFee);
+  let delivery = type === 'pickup' || s.deliveryEnabled === false ? 0 : (subtotal >= (s.freeFrom || 0) ? 0 : s.deliveryFee);
   let discount = 0;
   if (validCoupon) {
     if (validCoupon.type === 'percent') discount = (subtotal * validCoupon.value) / 100;
@@ -541,6 +569,106 @@ function cartSummary(type = 'delivery') {
   discount = +discount.toFixed(2);
   const total = Math.max(0, +(subtotal + delivery - discount).toFixed(2));
   return { subtotal, delivery, discount, total, coupon: validCoupon, couponProblem: problem };
+}
+
+/* ------------------------------------------------------------
+   4.1 Entrega por distância
+   ------------------------------------------------------------ */
+let lastGeoAt = 0;
+
+function haversineKm(a, b) {
+  const rad = (v) => (v * Math.PI) / 180;
+  const dLat = rad(b.lat - a.lat);
+  const dLng = rad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+}
+
+function geocodeQueryVariants(query) {
+  const base = String(query || '').trim();
+  const clean = base.replace(/[—–|]/g, ',').replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim();
+  const variants = clean ? [clean] : [];
+  const noNumber = clean.replace(/,?\s*\d{1,6}\b/g, ' ').replace(/\s*,\s*/g, ', ').replace(/\s+/g, ' ').trim();
+  if (noNumber && noNumber !== clean) variants.push(noNumber);
+  const parts = clean.split(',').map((x) => x.trim()).filter(Boolean);
+  if (parts.length > 2) variants.push(parts.slice(-2).join(', '));
+  return [...new Set(variants)].slice(0, 3);
+}
+
+async function geocodeFetch(term) {
+  const wait = 1100 - (Date.now() - lastGeoAt);
+  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+  lastGeoAt = Date.now();
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=0&accept-language=pt-BR&q=' + encodeURIComponent(term);
+    const res = await fetch(url, { signal: ctrl.signal, headers: { Accept: 'application/json' } });
+    if (!res.ok) return null;
+    const list = await res.json();
+    if (!Array.isArray(list) || !list.length) return null;
+    const lat = Number(list[0].lat);
+    const lng = Number(list[0].lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { lat, lng, label: String(list[0].display_name || term) };
+  } catch (e) {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function geocodeAddress(query) {
+  const q = String(query || '').trim();
+  if (q.length < 5) return null;
+  const key = q.toLowerCase().replace(/\s+/g, ' ');
+  const cache = loadJSON(GEO_KEY, {}) || {};
+  if (cache[key] && Date.now() - cache[key].at < 90 * 24 * 60 * 60 * 1000) return cache[key];
+
+  const variants = geocodeQueryVariants(q);
+  for (const term of variants) {
+    const hit = await geocodeFetch(term);
+    if (!hit) continue;
+    const point = { ...hit, at: Date.now() };
+    try {
+      const c = loadJSON(GEO_KEY, {}) || {};
+      c[key] = point;
+      const keys = Object.keys(c);
+      if (keys.length > 60) delete c[keys[0]];
+      localStorage.setItem(GEO_KEY, JSON.stringify(c));
+    } catch (e) { /* ignore */ }
+    return point;
+  }
+  return null;
+}
+
+async function ensureStoreCoords() {
+  const s = data.settings;
+  if (!s.address) return null;
+  if (s.storeLat != null && s.storeLng != null && s.geoAddress === s.address) {
+    return { lat: s.storeLat, lng: s.storeLng };
+  }
+  const point = await geocodeAddress(s.address);
+  if (!point) return null;
+  s.storeLat = point.lat;
+  s.storeLng = point.lng;
+  s.geoAddress = s.address;
+  saveData();
+  return point;
+}
+
+async function deliveryDistanceInfo(address) {
+  const s = data.settings;
+  if (s.deliveryEnabled === false) return { status: 'off' };
+  const max = Number(s.deliveryRadiusKm) || 0;
+  if (max <= 0) return { status: 'no-limit' };
+  const origin = await ensureStoreCoords();
+  if (!origin) return { status: 'unknown', reason: 'store' };
+  const dest = await geocodeAddress(address);
+  if (!dest) return { status: 'unknown', reason: 'address' };
+  const km = haversineKm(origin, dest);
+  return { status: km <= max ? 'inside' : 'outside', km, max };
 }
 
 /* ------------------------------------------------------------
@@ -629,12 +757,18 @@ function applySettings() {
   $('#heroWhats').href = waLink(`Olá! Vim pelo site da ${s.storeName} e gostaria de fazer um pedido 💗`);
   $('#menuHours').textContent = todayHoursLabel();
   $('#infoPhone').textContent = s.phone;
-  $('#infoEta').textContent = `${s.etaMax} min`;
-  $('#infoFee').textContent = money(s.deliveryFee);
+  $('#infoMin').textContent = money(s.minOrder);
+  const infoDelivery = $('#infoDelivery');
+  if (infoDelivery) {
+    infoDelivery.innerHTML = s.deliveryEnabled === false
+      ? 'No momento, pedidos apenas para <b>retirada no balcão</b>.'
+      : `Enviamos em até <b>${s.etaMax} min</b> na região. Frete <b>${money(s.deliveryFee)}</b>${s.freeFrom > 0 ? `, grátis acima de ${money(s.freeFrom)}` : ''}.`;
+  }
   const insta = String(s.instagram || '').replace(/^@/, '');
   $('#infoInstagram').textContent = s.instagram || '';
   $('#infoInstagram').href = insta ? `https://instagram.com/${insta}` : '#';
-  $('#floatEta').textContent = `${s.etaMin}–${s.etaMax} min`;
+  $('#floatEta').textContent = s.deliveryEnabled === false ? 'retirada' : `${s.etaMin}–${s.etaMax} min`;
+  $('#floatEtaLabel').textContent = s.deliveryEnabled === false ? 'no balcão' : 'entrega no mesmo dia';
   $('#footerYear').textContent = new Date().getFullYear();
 
   const reviews = data.reviews || [];
@@ -813,10 +947,11 @@ function renderCart() {
       </div>
     </div>`).join('');
 
-  const s = cartSummary('delivery');
+  const canDeliver = data.settings.deliveryEnabled !== false;
+  const s = cartSummary(canDeliver ? 'delivery' : 'pickup');
   const applied = s.coupon;
   const st = storeStatus();
-  const freeRemaining = Math.max(0, data.settings.freeFrom - s.subtotal);
+  const freeRemaining = Math.max(0, (data.settings.freeFrom || 0) - s.subtotal);
   const belowMin = s.subtotal < data.settings.minOrder;
 
   foot.innerHTML = `
@@ -827,12 +962,14 @@ function renderCart() {
           <button class="btn btn-soft" type="button" data-act="apply-coupon">Aplicar</button>
         </div>`}
     ${s.couponProblem && !applied ? `<div class="min-warn">${esc(s.couponProblem)}</div>` : ''}
-    ${freeRemaining > 0
-      ? `<div class="delivery-progress"><small>Faltam ${money(freeRemaining)} para frete grátis</small><div class="progress-bar"><i style="width:${clamp((s.subtotal / data.settings.freeFrom) * 100, 0, 100)}%"></i></div></div>`
-      : `<div class="delivery-progress"><small>Você ganhou frete grátis!</small><div class="progress-bar"><i style="width:100%"></i></div></div>`}
+    ${canDeliver
+      ? (freeRemaining > 0
+        ? `<div class="delivery-progress"><small>Faltam ${money(freeRemaining)} para frete grátis</small><div class="progress-bar"><i style="width:${clamp((s.subtotal / (data.settings.freeFrom || 1)) * 100, 0, 100)}%"></i></div></div>`
+        : `<div class="delivery-progress"><small>Você ganhou frete grátis!</small><div class="progress-bar"><i style="width:100%"></i></div></div>`)
+      : `<div class="min-warn">No momento, pedidos apenas para retirada no balcão.</div>`}
     <div class="summary">
       <div class="summary-row"><span>Subtotal</span><b>${money(s.subtotal)}</b></div>
-      <div class="summary-row"><span>Entrega</span><b>${s.delivery === 0 ? 'Grátis' : money(s.delivery)}</b></div>
+      <div class="summary-row"><span>${canDeliver ? 'Entrega' : 'Retirada'}</span><b>${s.delivery === 0 ? 'Grátis' : money(s.delivery)}</b></div>
       ${s.discount > 0 ? `<div class="summary-row discount"><span>Desconto</span><b>− ${money(s.discount)}</b></div>` : ''}
       <div class="summary-row total"><span>Total</span><b>${money(s.total)}</b></div>
     </div>
@@ -986,7 +1123,8 @@ function quickAdd(id) {
    ------------------------------------------------------------ */
 function openCheckout() {
   if (!state.cart.length) return;
-  const s = cartSummary('delivery');
+  const canDeliver = data.settings.deliveryEnabled !== false;
+  const s = cartSummary(canDeliver ? 'delivery' : 'pickup');
   if (s.subtotal < data.settings.minOrder) { toast(`Pedido mínimo de ${money(data.settings.minOrder)}.`, 'error'); return; }
   const pay = data.settings.payment;
   const customer = state.customer || {};
@@ -1004,17 +1142,18 @@ function openCheckout() {
           <div class="field">
             <span class="field-label">Como você quer receber?</span>
             <div class="co-type">
-              <label class="type-card on">
+              ${canDeliver ? `<label class="type-card on">
                 <input type="radio" name="type" value="delivery" checked>
                 ${icon('bike')}
-                <span><strong>Entrega</strong><small>${money(data.settings.deliveryFee)} · ${data.settings.etaMin}–${data.settings.etaMax} min</small></span>
-              </label>
-              <label class="type-card">
-                <input type="radio" name="type" value="pickup">
+                <span><strong>Entrega</strong><small>${data.settings.deliveryFee > 0 ? money(data.settings.deliveryFee) : 'Grátis'} · ${data.settings.etaMin}–${data.settings.etaMax} min</small></span>
+              </label>` : ''}
+              <label class="type-card ${canDeliver ? '' : 'on'}">
+                <input type="radio" name="type" value="pickup" ${canDeliver ? '' : 'checked'}>
                 ${icon('bag')}
                 <span><strong>Retirada</strong><small>Grátis · pronto no balcão</small></span>
               </label>
             </div>
+            ${canDeliver ? '' : '<p class="min-warn" style="margin-top:8px;">A entrega está desativada no momento. Seu pedido será preparado para retirada.</p>'}
           </div>
           <div class="form-grid">
             <div class="field">
@@ -1106,6 +1245,20 @@ function openCheckout() {
     if (digits(phone).length < 10) { toast('Informe um WhatsApp válido com DDD.', 'error'); return; }
     if (type === 'delivery' && address.length < 5) { toast('Informe o endereço completo para entrega.', 'error'); return; }
 
+    const submitBtn = $('#coSubmit');
+    const submitLabel = submitBtn ? submitBtn.innerHTML : '';
+    let deliveryKm = null;
+    if (type === 'delivery') {
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Verificando endereço...'; }
+      const info = await deliveryDistanceInfo(address);
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = submitLabel; }
+      if (info.status === 'outside') {
+        toast(`Endereço fora da área de entrega: ${info.km.toFixed(1).replace('.', ',')} km de distância. O raio máximo é de ${info.max} km.`, 'error');
+        return;
+      }
+      if (info.km != null) deliveryKm = +info.km.toFixed(1);
+    }
+
     const summary = cartSummary(type);
     const order = {
       id: uid('o'), createdAt: new Date().toISOString(), status: 'novo', type, payment,
@@ -1117,11 +1270,10 @@ function openCheckout() {
       subtotal: summary.subtotal, deliveryFee: summary.delivery, discount: summary.discount,
       coupon: summary.coupon ? summary.coupon.code : null, total: summary.total,
       note, changeFor: payment === 'cash' && changeFor ? changeFor : null, rated: false,
+      deliveryKm,
       statusHistory: [{ status: 'novo', at: new Date().toISOString() }]
     };
 
-    const submitBtn = $('#coSubmit');
-    const submitLabel = submitBtn ? submitBtn.innerHTML : '';
     if (state.cloud) {
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Enviando pedido...'; }
       try {
@@ -1640,7 +1792,7 @@ function openAdminOrder(id) {
     <div class="modal-body-pad">
       <div class="stat-row" style="margin-bottom:14px;">
         <div class="mini-stat"><small>Cliente</small><strong style="font-size:13px;margin-top:5px;">${esc(o.customer.name)}</strong><small>${esc(o.customer.phone)}</small></div>
-        <div class="mini-stat"><small>Endereço</small><strong style="font-size:12px;margin-top:5px;font-family:Inter;">${o.type === 'delivery' ? esc(o.customer.address || '—') : 'Retirada no balcão'}</strong></div>
+        <div class="mini-stat"><small>Endereço</small><strong style="font-size:12px;margin-top:5px;font-family:Inter;">${o.type === 'delivery' ? esc(o.customer.address || '—') : 'Retirada no balcão'}</strong>${o.type === 'delivery' && o.deliveryKm ? `<small>${String(o.deliveryKm).replace('.', ',')} km da loja</small>` : ''}</div>
         <div class="mini-stat"><small>Total</small><strong>${money(o.total)}</strong><small>${o.coupon ? 'cupom ' + esc(o.coupon) : 'sem cupom'}</small></div>
       </div>
       <div class="panel" style="box-shadow:none;">
@@ -1803,6 +1955,60 @@ function imagePickerHTML(selected) {
       <input type="file" accept="image/*" id="prodImgUpload">
     </label>
     <input type="hidden" name="image" id="prodImage" value="${esc(selected || APP_IMAGES[0])}">`;
+}
+
+function heroImageOptHTML(src, selected) {
+  return `<div class="image-opt-wrap">
+    <button type="button" class="image-opt ${src === selected ? 'on' : ''}" data-act="pick-hero" data-src="${esc(src)}" title="Usar esta imagem">
+      <img src="${esc(src)}" alt="" loading="lazy">
+      <span class="sel">${icon('check')}</span>
+    </button>
+    <button type="button" class="image-del" data-act="del-hero-image" data-src="${esc(src)}" title="Remover da galeria" aria-label="Remover imagem da galeria">${icon('x')}</button>
+  </div>`;
+}
+
+function heroGalleryHTML(gallery, selected) {
+  return (Array.isArray(gallery) ? gallery : DEFAULT_GALLERY).map((src) => heroImageOptHTML(src, selected)).join('');
+}
+
+function heroGalleryFromInput() {
+  try {
+    const parsed = JSON.parse($('#heroGalleryInput').value || '[]');
+    return Array.isArray(parsed) ? parsed.filter((src) => typeof src === 'string' && src) : DEFAULT_GALLERY.slice();
+  } catch (e) {
+    return DEFAULT_GALLERY.slice();
+  }
+}
+
+function setHeroGallery(gallery, selected) {
+  $('#heroGalleryInput').value = JSON.stringify(gallery);
+  $('#heroImageInput').value = selected;
+  $('#heroPicker').innerHTML = heroGalleryHTML(gallery, selected);
+}
+
+function imageFileToDataUrl(file, maxSize = 1400, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    if (!file || !/^image\//.test(file.type)) { reject(new Error('type')); return; }
+    if (file.size > 6 * 1024 * 1024) { reject(new Error('size')); return; }
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(img.width * scale));
+        canvas.height = Math.max(1, Math.round(img.height * scale));
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      } catch (e) { URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('read')); };
+    img.src = url;
+  });
 }
 
 function openProductForm(id) {
@@ -2322,13 +2528,12 @@ function adminSettingsHTML() {
             <div class="field"><label for="stWhats">WhatsApp (só números)</label><input id="stWhats" name="whatsapp" maxlength="20" value="${esc(s.whatsapp)}" placeholder="5521999990000"></div>
             <div class="field"><label for="stInsta">Instagram</label><input id="stInsta" name="instagram" maxlength="40" value="${esc(s.instagram)}"></div>
             <div class="field"><label for="stPix">Chave Pix</label><input id="stPix" name="pixKey" maxlength="80" value="${esc(s.pixKey)}"></div>
-            <div class="field span-2"><label for="stAddr">Endereço</label><input id="stAddr" name="address" maxlength="120" value="${esc(s.address)}"></div>
           </div>
         </section>
 
         <section class="settings-card">
-          <h3>Operação</h3>
-          <p>Entrega, pedido mínimo e status da loja.</p>
+          <h3>Entrega e operação</h3>
+          <p>Defina como o cliente recebe o pedido e a área atendida.</p>
           <div class="form-grid">
             <div class="field"><label for="stMode">Status</label>
               <select id="stMode" name="openMode">
@@ -2339,9 +2544,18 @@ function adminSettingsHTML() {
             </div>
             <div class="field"><label for="stEtaMin">Tempo mínimo (min)</label><input id="stEtaMin" name="etaMin" type="number" min="0" value="${s.etaMin}"></div>
             <div class="field"><label for="stEtaMax">Tempo máximo (min)</label><input id="stEtaMax" name="etaMax" type="number" min="0" value="${s.etaMax}"></div>
+            <div class="field span-2">
+              <label class="check-line"><input type="checkbox" name="deliveryEnabled" ${s.deliveryEnabled !== false ? 'checked' : ''}> Oferecer entrega nos pedidos</label>
+              <p style="font-size:11px;color:var(--muted-2);margin-top:4px;">Se desativar, o checkout aceita apenas retirada no balcão.</p>
+            </div>
             <div class="field"><label for="stFee">Taxa de entrega (R$)</label><input id="stFee" name="deliveryFee" type="number" min="0" step="0.01" value="${s.deliveryFee}"></div>
             <div class="field"><label for="stFree">Frete grátis acima de (R$)</label><input id="stFree" name="freeFrom" type="number" min="0" step="0.01" value="${s.freeFrom}"></div>
             <div class="field"><label for="stMin">Pedido mínimo (R$)</label><input id="stMin" name="minOrder" type="number" min="0" step="0.01" value="${s.minOrder}"></div>
+            <div class="field"><label for="stRadius">Raio máximo de entrega (km)</label><input id="stRadius" name="deliveryRadiusKm" type="number" min="0" step="0.5" value="${s.deliveryRadiusKm}"><small style="font-size:10.5px;color:var(--muted-2);">Use 0 para não limitar.</small></div>
+            <div class="field span-2"><label for="stAddr">Endereço da loja (origem do raio)</label><input id="stAddr" name="address" maxlength="140" value="${esc(s.address)}" placeholder="Rua, número, bairro, cidade"></div>
+            <div class="geo-status">${s.storeLat != null && s.geoAddress === s.address
+              ? `Origem do raio localizada (${s.storeLat.toFixed(4)}, ${s.storeLng.toFixed(4)}). Ao alterar o endereço, a localização é atualizada automaticamente.`
+              : 'O endereço será localizado automaticamente ao salvar. O limite por distância fica ativo somente depois da localização.'}</div>
           </div>
         </section>
 
@@ -2380,8 +2594,13 @@ function adminSettingsHTML() {
             <div class="field span-2"><label for="stHeroSub">Subtítulo</label><textarea id="stHeroSub" name="heroSubtitle" maxlength="200" style="min-height:58px;">${esc(s.hero.subtitle)}</textarea></div>
             <div class="field span-2">
               <label>Imagem do destaque</label>
-              <div class="image-picker">${APP_IMAGES.slice(0, 12).map((src) => `<button type="button" class="image-opt ${s.hero.image === src ? 'on' : ''}" data-act="pick-hero" data-src="${esc(src)}"><img src="${esc(src)}" alt="" loading="lazy"><span class="sel">${icon('check')}</span></button>`).join('')}</div>
+              <div class="image-picker" id="heroPicker">${heroGalleryHTML(s.hero.gallery, s.hero.image)}</div>
+              <label class="upload-zone">${icon('upload')} Adicionar imagem da galeria
+                <input type="file" accept="image/*" id="heroImgUpload">
+              </label>
+              <p style="font-size:11px;color:var(--muted-2);margin-top:7px;">Use o × em cada foto para removê-la da galeria. As imagens enviadas ficam salvas na sua loja.</p>
               <input type="hidden" name="heroImage" id="heroImageInput" value="${esc(s.hero.image)}">
+              <input type="hidden" name="heroGallery" id="heroGalleryInput" value="${esc(JSON.stringify(s.hero.gallery))}">
             </div>
           </div>
         </section>
@@ -2421,6 +2640,31 @@ function bindSettingsForm() {
     row.querySelector('.h-close').disabled = !chk.checked;
   }));
 
+  const heroUpload = $('#heroImgUpload');
+  if (heroUpload) {
+    heroUpload.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const gallery = heroGalleryFromInput();
+      if (gallery.length >= 20) { toast('A galeria já tem 20 imagens. Remova alguma antes de adicionar outra.', 'error'); e.target.value = ''; return; }
+      try {
+        const dataUrl = await imageFileToDataUrl(file, 1280, 0.8);
+        const used = gallery.reduce((sum, src) => sum + src.length, 0);
+        if (dataUrl.length > 500 * 1024 || used + dataUrl.length > 3.5 * 1024 * 1024) {
+          toast('Imagem pesada demais para a galeria. Use uma foto menor.', 'error');
+          return;
+        }
+        gallery.push(dataUrl);
+        setHeroGallery(gallery, dataUrl);
+        toast('Imagem adicionada — clique em Salvar alterações para aplicar.');
+      } catch (err) {
+        toast('Não foi possível usar essa imagem. Escolha um JPG ou PNG de até 6 MB.', 'error');
+      } finally {
+        e.target.value = '';
+      }
+    });
+  }
+
   const importInput = $('#importFile');
   if (importInput) {
     importInput.addEventListener('change', (e) => {
@@ -2430,7 +2674,8 @@ function bindSettingsForm() {
       reader.onload = () => {
         try {
           const parsed = JSON.parse(reader.result);
-          if (!parsed || parsed.version !== 1 || !Array.isArray(parsed.products)) throw new Error('invalid');
+          if (!parsed || ![1, 2].includes(parsed.version) || !Array.isArray(parsed.products)) throw new Error('invalid');
+          normalizeSettings(parsed.settings);
           data = parsed;
           saveData();
           toast('Backup restaurado com sucesso.');
@@ -2447,6 +2692,7 @@ function bindSettingsForm() {
     e.preventDefault();
     const fd = new FormData(form);
     const s = data.settings;
+    const prevAddress = s.address;
     s.storeName = String(fd.get('storeName') || s.storeName).trim();
     s.tagline = String(fd.get('tagline') || '').trim();
     s.phone = String(fd.get('phone') || '').trim();
@@ -2460,11 +2706,20 @@ function bindSettingsForm() {
     s.deliveryFee = num(fd.get('deliveryFee'), 0);
     s.freeFrom = num(fd.get('freeFrom'), 0);
     s.minOrder = num(fd.get('minOrder'), 0);
+    s.deliveryEnabled = !!fd.get('deliveryEnabled');
+    s.deliveryRadiusKm = Math.max(0, num(fd.get('deliveryRadiusKm'), 8));
     s.payment = { pix: !!fd.get('payPix'), card: !!fd.get('payCard'), cash: !!fd.get('payCash') };
     s.hero.badge = String(fd.get('heroBadge') || '').trim();
     s.hero.title = String(fd.get('heroTitle') || '').trim();
     s.hero.subtitle = String(fd.get('heroSubtitle') || '').trim();
-    s.hero.image = String(fd.get('heroImage') || s.hero.image);
+    const heroImage = String(fd.get('heroImage') || s.hero.image);
+    let gallery = [];
+    try { gallery = JSON.parse(String(fd.get('heroGallery') || '[]')); } catch (e) { /* ignore */ }
+    gallery = Array.isArray(gallery) ? gallery.filter((src) => typeof src === 'string' && src) : [];
+    if (!gallery.length) gallery = DEFAULT_GALLERY.slice();
+    if (heroImage && !gallery.includes(heroImage)) gallery.unshift(heroImage);
+    s.hero.image = heroImage || gallery[0];
+    s.hero.gallery = [...new Set(gallery)];
 
     s.hours = WEEK.map((_, i) => {
       const row = form.querySelector(`.hour-row[data-day="${i}"]`);
@@ -2482,6 +2737,31 @@ function bindSettingsForm() {
     }
     if (s.whatsapp.length < 10) { toast('Informe o WhatsApp com DDI e DDD, ex.: 5521999990000.', 'error'); return; }
     if (s.etaMax < s.etaMin) s.etaMax = s.etaMin;
+
+    let geoFailed = false;
+    const addressChanged = prevAddress !== s.address;
+    if (!s.address) {
+      s.storeLat = null;
+      s.storeLng = null;
+      s.geoAddress = '';
+    } else if (addressChanged || s.geoAddress !== s.address || s.storeLat == null) {
+      const submit = form.querySelector('button[type="submit"]');
+      const label = submit ? submit.innerHTML : '';
+      if (submit) { submit.disabled = true; submit.textContent = 'Localizando endereço...'; }
+      let point = null;
+      try { point = await geocodeAddress(s.address); } catch (err) { point = null; }
+      if (submit) { submit.disabled = false; submit.innerHTML = label; }
+      if (point) {
+        s.storeLat = point.lat;
+        s.storeLng = point.lng;
+        s.geoAddress = s.address;
+      } else {
+        s.storeLat = null;
+        s.storeLng = null;
+        s.geoAddress = '';
+        geoFailed = true;
+      }
+    }
 
     if (pin && state.cloud) {
       try {
@@ -2505,7 +2785,13 @@ function bindSettingsForm() {
     applySettings();
     renderCart();
     renderAdmin();
-    toast('Configurações salvas!');
+    if (geoFailed) {
+      toast('Configurações salvas, mas não foi possível localizar o endereço. Confira o endereço da loja ou tente salvar novamente.', 'error');
+    } else if (s.deliveryEnabled && s.deliveryRadiusKm > 0 && s.storeLat != null) {
+      toast(`Configurações salvas! Raio de ${String(s.deliveryRadiusKm).replace('.', ',')} km ativo a partir do endereço da loja.`);
+    } else {
+      toast('Configurações salvas!');
+    }
   });
 }
 
@@ -2629,6 +2915,15 @@ function handleAction(act, el) {
       const input = $('#heroImageInput');
       if (input) input.value = src;
       $$('#settingsForm .image-opt').forEach((b) => b.classList.toggle('on', b === el));
+      break;
+    }
+    case 'del-hero-image': {
+      const src = el.dataset.src;
+      const gallery = heroGalleryFromInput().filter((x) => x !== src);
+      if (!gallery.length) { toast('Mantenha pelo menos uma imagem na galeria.', 'error'); break; }
+      const current = $('#heroImageInput') ? $('#heroImageInput').value : '';
+      setHeroGallery(gallery, current !== src && gallery.includes(current) ? current : gallery[0]);
+      toast('Imagem removida — clique em Salvar alterações para aplicar.');
       break;
     }
     case 'add-size': {

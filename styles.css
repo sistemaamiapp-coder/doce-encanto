@@ -1015,6 +1015,19 @@ table.data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-
 .modal-body-pad { padding: 20px 26px 24px; }
 
 .image-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.image-opt-wrap { position: relative; min-width: 0; }
+.image-opt-wrap .image-opt { display: block; width: 100%; }
+.image-del {
+  position: absolute; top: 4px; right: 4px; z-index: 2;
+  width: 22px; height: 22px; border-radius: 50%; padding: 0;
+  display: grid; place-items: center;
+  background: rgba(44, 27, 28, .78); color: #fff;
+  border: 1px solid rgba(255, 255, 255, .35);
+  backdrop-filter: blur(4px);
+  transition: background .18s ease, transform .18s ease;
+}
+.image-del:hover { background: var(--danger); transform: scale(1.08); }
+.image-del svg { width: 12px; height: 12px; }
 .image-opt {
   border: 2px solid transparent; border-radius: 11px; overflow: hidden; padding: 0;
   aspect-ratio: 1; background: var(--grad-soft); position: relative;
@@ -1069,6 +1082,12 @@ table.data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-
 .settings-card > p { font-size: 11.5px; color: var(--muted); margin-bottom: 15px; }
 .settings-card .form-grid { gap: 11px; }
 .settings-card.full { grid-column: 1 / -1; }
+.geo-status {
+  grid-column: 1 / -1; font-size: 11px; line-height: 1.55; color: var(--muted);
+  background: var(--cream); border: 1px dashed var(--line-strong);
+  border-radius: 10px; padding: 9px 11px;
+}
+.geo-status b { color: var(--ink-2); }
 .hours-grid { display: flex; flex-direction: column; gap: 7px; }
 .hour-row { display: grid; grid-template-columns: 110px 1fr 1fr; gap: 8px; align-items: center; }
 .hour-row > span { font-size: 11.5px; font-weight: 600; color: var(--ink-2); }
@@ -1135,8 +1154,6 @@ table.data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-
   padding: 8px 0 8px 8px; background: transparent; font-family: var(--font-display); color: var(--ink);
 }
 .lock-error { color: var(--danger); font-size: 11.5px; min-height: 17px; font-weight: 600; }
-.lock-hint { font-size: 10.5px; color: var(--muted-2); margin-top: 14px; }
-.lock-hint b { color: var(--muted); }
 .lock-card .link-quiet { margin-top: 10px; }
 
 /* toast */
